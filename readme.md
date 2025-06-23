@@ -1,7 +1,7 @@
 
 ---
 
-# TutorialHell
+# TutorialHell- A clean slate for new learning
 
 Welcome to **TutorialHell** — my personal journey through tutorials and documentation! This repo serves as a central place for all my learning, experiments, and side projects as I work through various resources, mainly from YouTube and official docs.
 
