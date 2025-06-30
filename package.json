@@ -1,0 +1,18 @@
+{
+  "name": "tutorialhell",
+  "version": "1.0.0",
+  "description": "A collection of my personal practice and experiments as I work through tutorials and documentation (mainly from YouTube and official docs). This repo is where I try out new things, learn, and document my journey.",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@apollo/server": "^4.11.3",
+    "graphql": "^16.10.0",
+    "nodemon": "^3.1.9"
+  }
+}
