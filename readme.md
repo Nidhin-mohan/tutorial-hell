@@ -33,3 +33,7 @@ git checkout <branch-name>
 ## Contributing
 
 Got feedback, resources, or want to share your thoughts? Open an issue or submit a pull request! I'd love to hear from you.
+
+
+comit
+	Merge with --no-ff: git merge graphql-learning-net-ninja --no-ff -m "Learned GraphQL basics"
