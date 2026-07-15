@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Big-O Reference — DSA for JS Interviews</title>
+<style>
+  :root{
+    --ink:#e6e8ef; --muted:#9aa3b6; --line:#2a2f3c; --bg:#13151b;
+    --accent:#8aa2ff; --good:#69db7c; --warn:#ffa94d; --bad:#ff8787; --ok:#66d9e8;
+    --card:#1b1e27; --code-bg:#242938;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px; margin:0 auto; padding:48px 28px 80px}
+  header.doc{border-bottom:3px solid var(--accent); padding-bottom:18px; margin-bottom:28px}
+  .kicker{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700}
+  h1{font-size:30px; margin:6px 0 4px; letter-spacing:-.02em}
+  .sub{color:var(--muted); font-size:14px}
+  h2{font-size:18px; margin:34px 0 12px; letter-spacing:-.01em; display:flex; align-items:center; gap:9px}
+  h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line)}
+  th{background:#222633; font-weight:700; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted)}
+  tr:last-child td{border-bottom:none}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; background:var(--code-bg); padding:1.5px 6px; border-radius:5px; font-size:.9em; color:#cdd6ff}
+  .badge{display:inline-block; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-weight:700; font-size:12px; padding:2px 8px; border-radius:6px; white-space:nowrap}
+  .b-good{background:#173a23; color:var(--good)}
+  .b-ok{background:#0f3640; color:var(--ok)}
+  .b-warn{background:#3d2a13; color:var(--warn)}
+  .b-bad{background:#3d1c1c; color:var(--bad)}
+  .scale{display:flex; flex-direction:column; gap:7px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px}
+  .row{display:grid; grid-template-columns:120px 1fr; align-items:center; gap:12px}
+  .bar{height:14px; border-radius:7px}
+  .note{font-size:13px; color:var(--muted); margin-top:10px}
+  .tip{background:#1c2440; border:1px solid #34406b; border-left:4px solid var(--accent); border-radius:8px; padding:12px 14px; font-size:13.5px; margin-top:14px}
+  footer{margin-top:46px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  a{color:var(--accent)}
+  @media print{
+    :root{--ink:#1a1c23; --muted:#5b6170; --line:#e4e6ec; --bg:#fff; --card:#fff; --code-bg:#f4f5f8}
+    body{background:#fff} .wrap{padding:0} a{color:#1a1c23} code{color:#1a1c23}
+    th{background:#f0f2f7} .tip{background:#eef2ff; border-color:#c7d2fe}
+    .b-good{background:#e6f6ea; color:#2f9e44}.b-ok{background:#e3f7fb; color:#1098ad}
+    .b-warn{background:#fdeee2; color:#e8590c}.b-bad{background:#fbe6e6; color:#c92a2a}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="doc">
+    <div class="kicker">DSA Reference · Card 01</div>
+    <h1>Big-O for JavaScript Interviews</h1>
+    <div class="sub">The one-page complexity card. Pin it. Glance at it before every problem.</div>
+  </header>
+
+  <h2><span class="dot"></span>What Big-O means in one line</h2>
+  <p style="font-size:14.5px">Big-O describes <strong>how the work grows as the input <code>n</code> grows</strong> — not how many milliseconds it takes. We always quote the <strong>worst case</strong>, and we <strong>drop constants and lower-order terms</strong> (<code>O(2n+5)</code> → <code>O(n)</code>).</p>
+
+  <h2><span class="dot"></span>The complexity ladder (best → worst)</h2>
+  <div class="scale">
+    <div class="row"><span class="badge b-good">O(1)</span><div class="bar" style="width:8%;background:var(--good)"></div></div>
+    <div class="row"><span class="badge b-good">O(log n)</span><div class="bar" style="width:16%;background:#51cf66"></div></div>
+    <div class="row"><span class="badge b-ok">O(n)</span><div class="bar" style="width:34%;background:var(--ok)"></div></div>
+    <div class="row"><span class="badge b-ok">O(n log n)</span><div class="bar" style="width:50%;background:#3bc9db"></div></div>
+    <div class="row"><span class="badge b-warn">O(n²)</span><div class="bar" style="width:72%;background:var(--warn)"></div></div>
+    <div class="row"><span class="badge b-bad">O(2ⁿ)</span><div class="bar" style="width:92%;background:var(--bad)"></div></div>
+  </div>
+  <div class="tip"><strong>Interview rule of thumb:</strong> if your brute force is <code>O(n²)</code>, the interviewer almost always wants you to find an <code>O(n)</code> or <code>O(n log n)</code> way. That "better" approach is usually a <em>pattern</em> (hashing, two pointers, sliding window).</div>
+
+  <h2><span class="dot"></span>Each class, with JavaScript you recognise</h2>
+  <table>
+    <tr><th>Class</th><th>Name</th><th>JavaScript example</th></tr>
+    <tr><td><span class="badge b-good">O(1)</span></td><td>Constant</td><td><code>arr[5]</code>, <code>map.get(k)</code>, <code>set.has(x)</code>, <code>arr.push()</code></td></tr>
+    <tr><td><span class="badge b-good">O(log n)</span></td><td>Logarithmic</td><td>Binary search — halve the search space each step</td></tr>
+    <tr><td><span class="badge b-ok">O(n)</span></td><td>Linear</td><td>One <code>for</code> loop, <code>arr.map()</code>, <code>arr.includes(x)</code></td></tr>
+    <tr><td><span class="badge b-ok">O(n log n)</span></td><td>Linearithmic</td><td><code>arr.sort()</code> — the fast-sort benchmark</td></tr>
+    <tr><td><span class="badge b-warn">O(n²)</span></td><td>Quadratic</td><td>A loop inside a loop — nested <code>for</code>, or <code>arr.includes()</code> inside <code>arr.map()</code></td></tr>
+    <tr><td><span class="badge b-bad">O(2ⁿ)</span></td><td>Exponential</td><td>Naive recursive Fibonacci, "try every subset" brute force</td></tr>
+  </table>
+
+  <h2><span class="dot"></span>JavaScript operation cheat sheet</h2>
+  <table>
+    <tr><th>Operation</th><th>Cost</th><th>Watch out</th></tr>
+    <tr><td><code>arr[i]</code> (access by index)</td><td><span class="badge b-good">O(1)</span></td><td>—</td></tr>
+    <tr><td><code>arr.push()</code> / <code>arr.pop()</code></td><td><span class="badge b-good">O(1)</span></td><td>End of array is cheap</td></tr>
+    <tr><td><code>arr.unshift()</code> / <code>arr.shift()</code></td><td><span class="badge b-ok">O(n)</span></td><td>Front ops re-index everything!</td></tr>
+    <tr><td><code>arr.includes()</code> / <code>indexOf()</code></td><td><span class="badge b-ok">O(n)</span></td><td>Scans the whole array</td></tr>
+    <tr><td><code>arr.sort()</code></td><td><span class="badge b-ok">O(n log n)</span></td><td>—</td></tr>
+    <tr><td><code>map.get/set/has</code>, <code>obj[key]</code></td><td><span class="badge b-good">O(1)</span></td><td>Hash lookup — the magic of the hashing pattern</td></tr>
+    <tr><td><code>set.has()</code> / <code>set.add()</code></td><td><span class="badge b-good">O(1)</span></td><td>Use instead of <code>includes()</code> for membership</td></tr>
+  </table>
+  <p class="note">Complexities per the ES6 spec (average case) and the standard references below.</p>
+
+  <h2><span class="dot"></span>How to read complexity off your own code</h2>
+  <table>
+    <tr><th>You see…</th><th>It's usually…</th></tr>
+    <tr><td>No loops, just a few operations</td><td><span class="badge b-good">O(1)</span></td></tr>
+    <tr><td>One loop over the input</td><td><span class="badge b-ok">O(n)</span></td></tr>
+    <tr><td>A loop inside a loop, both over <code>n</code></td><td><span class="badge b-warn">O(n²)</span></td></tr>
+    <tr><td>Halving the problem each step</td><td><span class="badge b-good">O(log n)</span></td></tr>
+    <tr><td>A sort, then a single loop</td><td><span class="badge b-ok">O(n log n)</span></td></tr>
+    <tr><td>Building a Map/Set to avoid a nested loop</td><td><span class="badge b-ok">O(n)</span> time, <span class="badge b-ok">O(n)</span> space</td></tr>
+  </table>
+  <div class="tip"><strong>Space complexity</strong> works the same way: count the <em>extra</em> memory you allocate that grows with <code>n</code> (a new array/Map of size n = <code>O(n)</code> space; a few variables = <code>O(1)</code>).</div>
+
+  <footer>
+    Sources:
+    <a href="https://www.bigocheatsheet.com/">bigocheatsheet.com</a> ·
+    <a href="https://www.30secondsofcode.org/js/s/big-o-cheatsheet/">30 seconds of code — JS Big-O</a> ·
+    <a href="https://www.techinterviewhandbook.org/algorithms/study-cheatsheet/">Tech Interview Handbook</a><br>
+    Companion to <strong>Lesson 0001 — Big-O Through JavaScript</strong>. Part of your DSA interview mission.
+  </footer>
+</div>
+</body>
+</html>

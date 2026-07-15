@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 01 — Big-O Through JavaScript</title>
+<style>
+  :root{
+    --ink:#e6e8ef; --muted:#9aa3b6; --line:#2a2f3c; --bg:#13151b;
+    --accent:#8aa2ff; --accent-soft:#1c2440; --good:#69db7c; --bad:#ff8787;
+    --card:#1b1e27; --code-bg:#1a1e2c; --code-ink:#e7ecff;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:44px 24px 90px}
+  .kicker{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700}
+  h1{font-size:32px; margin:6px 0 8px; letter-spacing:-.025em; line-height:1.15}
+  .lede{font-size:17px; color:var(--muted); margin:0 0 8px}
+  .meta{display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin:18px 0 30px; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+  .meta b{color:var(--ink)}
+  h2{font-size:22px; margin:40px 0 12px; letter-spacing:-.02em}
+  .step{font-size:12px; color:var(--accent); font-weight:700; letter-spacing:.08em; text-transform:uppercase}
+  p{font-size:16px}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:16px 18px; border-radius:11px; overflow-x:auto; font-size:13.5px; line-height:1.6; margin:14px 0}
+  pre code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  code.inl{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; background:#262b3a; color:#cdd6ff; padding:1.5px 6px; border-radius:5px; font-size:.88em}
+  .tok-key{color:#ff9d6b} .tok-fn{color:#74c0fc} .tok-str{color:#a9e34b} .tok-com{color:#7d8aa8; font-style:italic} .tok-num{color:#ffd43b}
+  .callout{background:var(--accent-soft); border:1px solid #34406b; border-left:4px solid var(--accent); border-radius:10px; padding:14px 18px; margin:20px 0; font-size:15px}
+  .callout b{color:var(--accent)}
+  .demo{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin:22px 0; box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .demo h3{margin:0 0 6px; font-size:16px}
+  .demo p.small{font-size:13.5px; color:var(--muted); margin:0 0 14px}
+  button{font:inherit; font-weight:600; font-size:14px; cursor:pointer; border:none; border-radius:9px; padding:10px 16px; background:var(--accent); color:#fff; transition:transform .06s, background .15s}
+  button:hover{background:#2f4bc7} button:active{transform:translateY(1px)}
+  .result{margin-top:14px; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:13px; background:#0c0f17; color:#e7ecff; border:1px solid var(--line); border-radius:9px; padding:14px; min-height:22px; white-space:pre-wrap; display:none}
+  .result.show{display:block}
+  .winner{color:#a9e34b; font-weight:700}
+  .loser{color:#ffa8a8}
+  /* quiz */
+  .quiz{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; margin:24px 0}
+  .quiz .q{font-weight:600; font-size:16px; margin:0 0 14px}
+  .opt{display:block; width:100%; text-align:left; background:#222633; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:12px 15px; margin:8px 0; font-size:14.5px; font-weight:500; transition:.12s}
+  .opt:hover{border-color:var(--accent); background:#2a3042}
+  .opt.correct{background:#173a23; border-color:var(--good); color:#b2f2bb}
+  .opt.wrong{background:#3d1c1c; border-color:var(--bad); color:#ffc9c9}
+  .opt.disabled{pointer-events:none; opacity:.9}
+  .feedback{margin-top:12px; font-size:14.5px; padding:12px 15px; border-radius:9px; display:none}
+  .feedback.show{display:block}
+  .feedback.ok{background:#173a23; color:#b2f2bb}
+  .feedback.no{background:#3d2a13; color:#ffd8a8}
+  .checklist{list-style:none; padding:0; margin:14px 0}
+  .checklist li{padding:8px 0 8px 30px; position:relative; font-size:15px; border-bottom:1px solid var(--line)}
+  .checklist li::before{content:"✓"; position:absolute; left:4px; top:8px; color:var(--good); font-weight:800}
+  .next{background:linear-gradient(135deg,#3b5bdb,#5c7cfa); color:#fff; border-radius:14px; padding:24px; margin:34px 0 10px}
+  .next h2{color:#fff; margin:0 0 10px}
+  .next a{color:#fff; font-weight:700}
+  .ask{background:#2e2716; border:1px solid #6b5a2b; border-radius:10px; padding:14px 18px; font-size:14.5px; margin:24px 0}
+  a{color:var(--accent)}
+  .reflink{display:inline-flex; align-items:center; gap:7px; background:#222633; border:1px solid var(--line); border-radius:9px; padding:9px 14px; text-decoration:none; color:var(--ink); font-weight:600; font-size:14px; margin:6px 8px 6px 0}
+  .reflink:hover{border-color:var(--accent)}
+  footer{margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">DSA for Interviews · Lesson 01</div>
+  <h1>Big-O, taught through JavaScript you already write</h1>
+  <p class="lede">The single most important DSA idea — and you can feel it in code you've used a hundred times.</p>
+
+  <div class="meta">
+    <span>⏱ <b>~12 min</b></span>
+    <span>🎯 <b>The win:</b> say a solution's Big-O out loud and mean it</span>
+    <span>🧩 <b>Pattern seed:</b> why we reach for <code class="inl">Set</code> &amp; <code class="inl">Map</code></span>
+  </div>
+
+  <p>Every coding interview, after you get a working answer, comes the question: <em>"What's the time complexity?"</em> Right now that question is scary. By the end of this lesson it won't be — because Big-O isn't academic. It's a label for something you already have intuition about.</p>
+
+  <h2><span class="step">Step 1 · The idea</span><br>Big-O = how the work grows as the input grows</h2>
+  <p>Big-O does <strong>not</strong> measure milliseconds. It measures <strong>how the amount of work scales as your input <code class="inl">n</code> gets bigger.</strong> Two rules and you've got 90% of it:</p>
+  <ul>
+    <li><strong>Worst case.</strong> We describe the most work it could ever do.</li>
+    <li><strong>Drop the noise.</strong> Constants and small terms don't matter at scale: <code class="inl">O(2n + 5)</code> is just <code class="inl">O(n)</code>. We care about the <em>shape</em> of the growth, not the exact count.</li>
+  </ul>
+
+  <p>The two shapes you'll meet constantly:</p>
+  <pre><code><span class="tok-com">// O(1) — "constant": work does NOT grow with n.</span>
+<span class="tok-com">// Grabbing one thing. Same effort for 10 items or 10 million.</span>
+<span class="tok-key">const</span> first = arr[<span class="tok-num">0</span>];
+
+<span class="tok-com">// O(n) — "linear": work grows in step with n.</span>
+<span class="tok-com">// Touch every item once. 2x the items = 2x the work.</span>
+<span class="tok-key">for</span> (<span class="tok-key">const</span> x <span class="tok-key">of</span> arr) { total += x; }</code></pre>
+
+  <div class="callout"><b>Anchor it:</b> you already know <code class="inl">arr.map()</code> visits every element. That's <code class="inl">O(n)</code>. You already know <code class="inl">arr[5]</code> is instant. That's <code class="inl">O(1)</code>. You've been doing Big-O intuitively — we're just giving it names.</div>
+
+  <h2><span class="step">Step 2 · The "aha"</span><br>The same task, two complexities</h2>
+  <p>Here's the moment Big-O stops being abstract. Two ways to check "is this value in my collection?" — both correct, both common in real JS. But they scale completely differently.</p>
+
+  <pre><code><span class="tok-com">// Version A — Array.includes()  →  O(n)</span>
+<span class="tok-com">// To answer, JS scans the array element by element.</span>
+<span class="tok-key">const</span> seen = [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, ...]; <span class="tok-com">// big array</span>
+seen.<span class="tok-fn">includes</span>(target);    <span class="tok-com">// worst case: look at ALL n items</span>
+
+<span class="tok-com">// Version B — Set.has()  →  O(1)</span>
+<span class="tok-com">// A Set is a hash table. It jumps straight to the answer.</span>
+<span class="tok-key">const</span> seen = <span class="tok-key">new</span> <span class="tok-fn">Set</span>([<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, ...]);
+seen.<span class="tok-fn">has</span>(target);         <span class="tok-com">// one hop, regardless of size</span></code></pre>
+
+  <p>On a small array you'd never notice. As <code class="inl">n</code> grows, the gap explodes. Don't take my word for it — run it. This searches for a value that <em>isn't</em> there (the true worst case) thousands of times in both an Array and a Set:</p>
+
+  <div class="demo">
+    <h3>🔬 Feel the difference</h3>
+    <p class="small">Builds a 50,000-item collection, then does 20,000 worst-case lookups each way. Runs in your browser, right now.</p>
+    <button onclick="runBench()">▶ Run the benchmark</button>
+    <div class="result" id="benchOut"></div>
+  </div>
+
+  <div class="callout"><b>This is the whole game.</b> Picking the data structure with the better Big-O is most of what "optimising" a solution means in interviews. Swapping an <code class="inl">includes()</code> (O(n)) inside a loop for a <code class="inl">Set.has()</code> (O(1)) is the move that turns an <code class="inl">O(n²)</code> brute force into a clean <code class="inl">O(n)</code> answer. You'll use this exact trick in the very next lesson.</div>
+
+  <h2><span class="step">Step 3 · The trap</span><br>A loop inside a loop = O(n²)</h2>
+  <p>The most common complexity interviewers want you to escape. When you nest a loop over <code class="inl">n</code> inside another loop over <code class="inl">n</code>, you do <code class="inl">n × n</code> work:</p>
+  <pre><code><span class="tok-com">// "Are there any duplicates?" — the brute-force way</span>
+<span class="tok-key">for</span> (<span class="tok-key">let</span> i = <span class="tok-num">0</span>; i &lt; arr.length; i++) {      <span class="tok-com">// runs n times…</span>
+  <span class="tok-key">for</span> (<span class="tok-key">let</span> j = i + <span class="tok-num">1</span>; j &lt; arr.length; j++) { <span class="tok-com">// …each doing ~n work  → O(n²)</span>
+    <span class="tok-key">if</span> (arr[i] === arr[j]) <span class="tok-key">return</span> <span class="tok-key">true</span>;
+  }
+}</code></pre>
+  <p>Note: <code class="inl">arr.includes()</code> <em>inside</em> a <code class="inl">map()</code> or <code class="inl">for</code> loop is the sneaky version of this — a hidden loop inside a loop. Same <code class="inl">O(n²)</code> trap. The fix is almost always Step 2's idea: a <code class="inl">Set</code> or <code class="inl">Map</code> to make the inner lookup <code class="inl">O(1)</code>.</p>
+
+  <h2><span class="step">Step 4 · Check yourself</span><br>Read the complexity off the code</h2>
+  <p>This is exactly what an interviewer asks. Answer each, then click — instant feedback.</p>
+
+  <div class="quiz" id="q1">
+    <p class="q">1. What's the time complexity?</p>
+    <pre style="margin-top:0"><code><span class="tok-key">function</span> <span class="tok-fn">sumAll</span>(arr) {
+  <span class="tok-key">let</span> total = <span class="tok-num">0</span>;
+  <span class="tok-key">for</span> (<span class="tok-key">const</span> n <span class="tok-key">of</span> arr) total += n;
+  <span class="tok-key">return</span> total;
+}</code></pre>
+    <button class="opt" data-ok="0">O(1) — constant</button>
+    <button class="opt" data-ok="1">O(n) — linear</button>
+    <button class="opt" data-ok="0">O(n²) — quadratic</button>
+    <div class="feedback" data-ok="One single loop that touches each of the n elements exactly once → O(n). Doubling the array doubles the work.">…</div>
+  </div>
+
+  <div class="quiz" id="q2">
+    <p class="q">2. And this one?</p>
+    <pre style="margin-top:0"><code><span class="tok-key">function</span> <span class="tok-fn">hasPair</span>(arr, target) {
+  <span class="tok-key">for</span> (<span class="tok-key">let</span> i = <span class="tok-num">0</span>; i &lt; arr.length; i++)
+    <span class="tok-key">for</span> (<span class="tok-key">let</span> j = i+<span class="tok-num">1</span>; j &lt; arr.length; j++)
+      <span class="tok-key">if</span> (arr[i] + arr[j] === target) <span class="tok-key">return</span> <span class="tok-key">true</span>;
+  <span class="tok-key">return</span> <span class="tok-key">false</span>;
+}</code></pre>
+    <button class="opt" data-ok="0">O(n) — linear</button>
+    <button class="opt" data-ok="0">O(log n) — logarithmic</button>
+    <button class="opt" data-ok="1">O(n²) — quadratic</button>
+    <div class="feedback" data-ok="A loop nested inside a loop, both over n → n × n = O(n²). This is the classic 'brute force' a Set/Map can usually improve to O(n). (Spoiler: that's the Two Sum problem — next lesson.)">…</div>
+  </div>
+
+  <div class="quiz" id="q3">
+    <p class="q">3. You need to check membership thousands of times. Which is the better interview answer?</p>
+    <button class="opt" data-ok="0">Keep the data in an Array and use <code class="inl">.includes()</code> each time — O(n) per check</button>
+    <button class="opt" data-ok="1">Put the data in a <code class="inl">Set</code> once, then use <code class="inl">.has()</code> — O(1) per check</button>
+    <div class="feedback" data-ok="Exactly. One-time O(n) cost to build the Set, then every lookup is O(1) instead of O(n). For repeated membership checks this is the standard move — and the seed of the hashing pattern.">…</div>
+  </div>
+
+  <h2><span class="step">Step 5 · Lock it in</span><br>The interview phrasing</h2>
+  <p>Saying it out loud is a skill of its own. Practice this exact sentence shape on every problem from now on:</p>
+  <div class="callout" style="font-size:15.5px">"This runs in <b>O(___)</b> time because <b>[I loop over the input once / I have a nested loop / I do a constant number of lookups]</b>, and <b>O(___)</b> space because <b>[I build a Map of size n / I only use a few variables]</b>."</div>
+
+  <ul class="checklist">
+    <li>Big-O = how work grows with <code class="inl">n</code>; worst case; drop constants</li>
+    <li>One loop → <code class="inl">O(n)</code> · nested loop → <code class="inl">O(n²)</code> · direct lookup → <code class="inl">O(1)</code></li>
+    <li><code class="inl">Set.has()</code> / <code class="inl">Map.get()</code> are <code class="inl">O(1)</code> — the tool to kill nested loops</li>
+    <li>I can state both <strong>time</strong> and <strong>space</strong> complexity out loud</li>
+  </ul>
+
+  <div style="margin:22px 0">
+    <a class="reflink" href="../reference/big-o-cheatsheet.html">📄 Open your Big-O Reference Card</a>
+  </div>
+
+  <div class="ask">
+    💬 <strong>I'm your teacher — ask me anything.</strong> Stuck on why <code class="inl">Set</code> is O(1)? Want more practice questions? Want me to explain space complexity deeper, or check your reasoning on a problem? Just tell me in the chat and we'll go as deep as you like before moving on.
+  </div>
+
+  <div class="next">
+    <h2>What's next</h2>
+    <p style="margin:0 0 8px">You just learned <em>why</em> we reach for a <code class="inl" style="background:rgba(255,255,255,.2);color:#fff">Set</code>. <strong>Lesson 02</strong> puts it to work on the most-asked interview problem of all — <strong>Two Sum</strong> — and formally introduces the <strong>hashing pattern</strong>. That nested-loop O(n²) from quiz #2? You'll crush it down to O(n).</p>
+    <p style="margin:10px 0 0; font-size:14px; opacity:.9">Say <b>"next lesson"</b> when you're ready, or ask me to drill Big-O more first.</p>
+  </div>
+
+  <footer>
+    Sources:
+    <a href="https://www.30secondsofcode.org/js/s/big-o-cheatsheet/">30 seconds of code — JS Big-O</a> ·
+    <a href="https://www.bigocheatsheet.com/">Big-O Cheat Sheet</a> ·
+    <a href="https://www.techinterviewhandbook.org/algorithms/study-cheatsheet/">Tech Interview Handbook</a><br>
+    Lesson 01 of your DSA interview track. Companion reference: <a href="../reference/big-o-cheatsheet.html">Big-O Card</a>.
+  </footer>
+</div>
+
+<script>
+function runBench(){
+  const out = document.getElementById('benchOut');
+  out.classList.add('show');
+  out.textContent = 'Running… building 50,000 items and doing 20,000 lookups each…';
+  setTimeout(()=>{
+    const N = 50000, LOOKUPS = 20000;
+    const arr = [];
+    for (let i=0;i<N;i++) arr.push(i);
+    const set = new Set(arr);
+
+    // worst case: search for values not present
+    let t0 = performance.now();
+    let hitsA = 0;
+    for (let i=0;i<LOOKUPS;i++){ if (arr.includes(-1)) hitsA++; }
+    let tArr = performance.now() - t0;
+
+    t0 = performance.now();
+    let hitsB = 0;
+    for (let i=0;i<LOOKUPS;i++){ if (set.has(-1)) hitsB++; }
+    let tSet = performance.now() - t0;
+
+    const factor = tSet > 0 ? Math.round(tArr / tSet) : '∞';
+    out.innerHTML =
+      `Array.includes()  →  <span class="loser">${tArr.toFixed(1)} ms</span>   (O(n): scans all ${N.toLocaleString()} each time)\n` +
+      `Set.has()         →  <span class="winner">${tSet.toFixed(1)} ms</span>   (O(1): one hop, every time)\n\n` +
+      `➡  The Set was about ${factor}× faster — and the bigger n gets, the wider that gap.\n` +
+      `   Same correct answer. Completely different Big-O.`;
+  }, 30);
+}
+
+document.querySelectorAll('.quiz').forEach(quiz=>{
+  const fb = quiz.querySelector('.feedback');
+  quiz.querySelectorAll('.opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const correct = btn.dataset.ok === '1';
+      quiz.querySelectorAll('.opt').forEach(b=>{
+        b.classList.add('disabled');
+        if (b.dataset.ok === '1') b.classList.add('correct');
+      });
+      if (!correct) btn.classList.add('wrong');
+      fb.textContent = (correct ? '✓ Correct. ' : '✗ Not quite. ') + fb.dataset.ok;
+      fb.classList.add('show', correct ? 'ok' : 'no');
+    });
+  });
+});
+</script>
+</body>
+</html>

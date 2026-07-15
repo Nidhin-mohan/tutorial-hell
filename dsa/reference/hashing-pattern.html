@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hashing Pattern — DSA Reference Card</title>
+<style>
+  :root{
+    --ink:#e6e8ef; --muted:#9aa3b6; --line:#2a2f3c; --bg:#13151b;
+    --accent:#8aa2ff; --good:#69db7c; --warn:#ffa94d; --card:#1b1e27; --code-bg:#1a1e2c;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:880px; margin:0 auto; padding:48px 28px 80px}
+  header.doc{border-bottom:3px solid var(--accent); padding-bottom:18px; margin-bottom:28px}
+  .kicker{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700}
+  h1{font-size:30px; margin:6px 0 4px; letter-spacing:-.02em}
+  .sub{color:var(--muted); font-size:14px}
+  h2{font-size:18px; margin:32px 0 12px; display:flex; align-items:center; gap:9px}
+  h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block}
+  p{font-size:14.5px}
+  pre{background:var(--code-bg); color:#e7ecff; padding:15px 18px; border-radius:11px; overflow-x:auto; font-size:13px; line-height:1.6}
+  pre code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; background:#262b3a; padding:1.5px 6px; border-radius:5px; font-size:.9em; color:#cdd6ff}
+  .tok-key{color:#ff9d6b} .tok-fn{color:#74c0fc} .tok-com{color:#7d8aa8;font-style:italic} .tok-num{color:#ffd43b}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{background:#222633; font-weight:700; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted)}
+  tr:last-child td{border-bottom:none}
+  .tip{background:#1c2440; border:1px solid #34406b; border-left:4px solid var(--accent); border-radius:8px; padding:12px 15px; font-size:13.5px; margin-top:14px}
+  .trigger{background:#16241c; border:1px solid #2f5a3d; border-left:4px solid var(--good); border-radius:8px; padding:12px 15px; font-size:13.5px; margin-top:14px}
+  footer{margin-top:42px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  a{color:var(--accent)}
+  @media print{
+    :root{--ink:#1a1c23;--muted:#5b6170;--line:#e4e6ec;--bg:#fff;--card:#fff;--code-bg:#0f1320}
+    body{background:#fff} .wrap{padding:0} a{color:#1a1c23} code{color:#1a1c23;background:#f4f5f8}
+    th{background:#f0f2f7} .tip{background:#eef2ff;border-color:#c7d2fe} .trigger{background:#e6f6ea;border-color:#a3d9b1}
+    pre{color:#e7ecff}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="doc">
+    <div class="kicker">DSA Reference · Card 02 · Pattern</div>
+    <h1>The Hashing Pattern</h1>
+    <div class="sub">Trade memory for speed: turn an inner search into an O(1) lookup.</div>
+  </header>
+
+  <h2><span class="dot"></span>When to reach for it — the trigger</h2>
+  <div class="trigger">If your brute force is <strong>"for each item, search the rest of the array"</strong> (a nested loop, O(n²)), a Map/Set almost always collapses the inner search to <strong>O(1)</strong>, making the whole thing <strong>O(n)</strong>.</div>
+  <p>Listen for these question shapes — each maps to a tool:</p>
+  <table>
+    <tr><th>The question</th><th>Tool</th><th>Stores</th></tr>
+    <tr><td><strong>"Have I seen this before?"</strong> (duplicates, membership)</td><td><code>Set</code></td><td>just the values</td></tr>
+    <tr><td><strong>"How many times have I seen this?"</strong> (frequency, anagrams)</td><td><code>Map</code></td><td>value → count</td></tr>
+    <tr><td><strong>"Where did I see this / its partner?"</strong> (Two Sum)</td><td><code>Map</code></td><td>value → index</td></tr>
+  </table>
+
+  <h2><span class="dot"></span>The three template snippets</h2>
+  <p><strong>1 · Membership / duplicates</strong></p>
+  <pre><code><span class="tok-key">const</span> seen = <span class="tok-key">new</span> <span class="tok-fn">Set</span>();
+<span class="tok-key">for</span> (<span class="tok-key">const</span> x <span class="tok-key">of</span> arr) {
+  <span class="tok-key">if</span> (seen.<span class="tok-fn">has</span>(x)) <span class="tok-key">return</span> <span class="tok-key">true</span>;   <span class="tok-com">// duplicate found</span>
+  seen.<span class="tok-fn">add</span>(x);
+}</code></pre>
+
+  <p><strong>2 · Frequency count</strong></p>
+  <pre><code><span class="tok-key">const</span> count = <span class="tok-key">new</span> <span class="tok-fn">Map</span>();
+<span class="tok-key">for</span> (<span class="tok-key">const</span> x <span class="tok-key">of</span> arr) {
+  count.<span class="tok-fn">set</span>(x, (count.<span class="tok-fn">get</span>(x) ?? <span class="tok-num">0</span>) + <span class="tok-num">1</span>);
+}</code></pre>
+
+  <p><strong>3 · Seen-value → index (Two Sum)</strong></p>
+  <pre><code><span class="tok-key">const</span> seen = <span class="tok-key">new</span> <span class="tok-fn">Map</span>();          <span class="tok-com">// value → index</span>
+<span class="tok-key">for</span> (<span class="tok-key">let</span> i = <span class="tok-num">0</span>; i &lt; nums.length; i++) {
+  <span class="tok-key">const</span> need = target - nums[i];
+  <span class="tok-key">if</span> (seen.<span class="tok-fn">has</span>(need)) <span class="tok-key">return</span> [seen.<span class="tok-fn">get</span>(need), i];
+  seen.<span class="tok-fn">set</span>(nums[i], i);          <span class="tok-com">// check BEFORE insert</span>
+}</code></pre>
+
+  <h2><span class="dot"></span>Map vs Set vs plain object</h2>
+  <table>
+    <tr><th>Use</th><th>When</th></tr>
+    <tr><td><code>Set</code></td><td>You only care <em>whether</em> something exists. Unique values.</td></tr>
+    <tr><td><code>Map</code></td><td>You need to associate each key with data (count, index). Keys can be any type; preserves insertion order.</td></tr>
+    <tr><td><code>{}</code> object</td><td>Quick string-keyed counting. Fine, but Map is safer (no prototype-key surprises, any key type, has <code>.size</code>).</td></tr>
+  </table>
+
+  <h2><span class="dot"></span>Under the hood — why O(1)</h2>
+  <p>You'll almost never implement this in an interview, but you should be able to <em>explain</em> it — that's what signals real understanding, not just API recall:</p>
+  <table>
+    <tr><th>Step</th><th>What happens</th></tr>
+    <tr><td>1. Hash</td><td>A hash function turns the key into a number.</td></tr>
+    <tr><td>2. Bucket</td><td>That number is reduced (<code>% array size</code>) to an index into an underlying array — the "bucket."</td></tr>
+    <tr><td>3. Store/lookup</td><td>Value lives at that bucket. Lookup re-hashes the key and jumps straight there — no scanning, hence O(1).</td></tr>
+    <tr><td>4. Collisions</td><td>Two keys can hash to the same bucket. Handled via chaining (a small list per bucket). Worst case (everything collides) degrades to O(n), but a good hash function makes this rare.</td></tr>
+    <tr><td>5. Resize</td><td>When too full, the table reallocates + rehashes everything — O(n) but rare, so it's <em>amortized</em> away and doesn't change average-case O(1).</td></tr>
+  </table>
+  <div class="tip"><strong>Interview myth-buster:</strong> built-in <code>Map</code>/<code>Set</code> are expected and encouraged in standard coding interviews — using them well <em>is</em> the signal. You only implement a hash map from scratch if the question explicitly asks (e.g. LeetCode 706, "Design HashMap").</div>
+
+  <h2><span class="dot"></span>Complexity &amp; the gotchas</h2>
+  <table>
+    <tr><th>Aspect</th><th>Value</th></tr>
+    <tr><td>Time</td><td><code>O(n)</code> — one pass, O(1) per lookup/insert</td></tr>
+    <tr><td>Space</td><td><code>O(n)</code> — the Map/Set may hold up to n entries</td></tr>
+  </table>
+  <div class="tip"><strong>Say it out loud:</strong> "O(n) time, O(n) space — I trade memory for speed." Naming the trade-off signals senior thinking in an interview.</div>
+  <div class="tip"><strong>Two Sum gotcha:</strong> check <code>has(complement)</code> <em>before</em> inserting the current value, or a number can falsely pair with itself.</div>
+
+  <h2><span class="dot"></span>Canonical problems</h2>
+  <table>
+    <tr><th>Problem</th><th>Flavour</th></tr>
+    <tr><td><a href="https://leetcode.com/problems/two-sum/">Two Sum (1)</a></td><td>value → index</td></tr>
+    <tr><td><a href="https://leetcode.com/problems/contains-duplicate/">Contains Duplicate (217)</a></td><td>membership → Set</td></tr>
+    <tr><td><a href="https://leetcode.com/problems/valid-anagram/">Valid Anagram (242)</a></td><td>frequency count</td></tr>
+    <tr><td><a href="https://leetcode.com/problems/group-anagrams/">Group Anagrams (49)</a></td><td>map a computed key → list (stretch)</td></tr>
+  </table>
+
+  <footer>
+    Sources: <a href="https://www.techinterviewhandbook.org/algorithms/hash-table/">Tech Interview Handbook — Hash Table</a> ·
+    <a href="https://leetcode.com/problems/two-sum/">LeetCode — Two Sum</a><br>
+    Companion to <strong>Lesson 0002 — Two Sum &amp; the Hashing Pattern</strong>.
+  </footer>
+</div>
+</body>
+</html>

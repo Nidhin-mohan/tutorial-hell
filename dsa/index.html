@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSA — Filter-Round Tracker</title>
+<style>
+  :root{
+    /* base — matches the lesson & reference-card palette */
+    --bg:#13151b;
+    --card:#1b1e27;
+    --card-2:#20242f;
+    --line:#2a2f3c;
+    --ink:#e6e8ef;
+    --muted:#9aa3b6;
+
+    /* accent — blue means "go read this" */
+    --accent:#8aa2ff;
+    --accent-soft:#1c2440;
+
+    /* semantic — green means progress */
+    --green:#4ade80;
+    --green-dim:#2f9e63;
+    --green-soft:#152a1f;
+    --amber:#fbbf24;
+    --amber-soft:#2e2410;
+    --red:#f87171;
+    --red-soft:#2e1a1a;
+
+    --mono:'JetBrains Mono','SF Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;
+    padding:0 16px 80px;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto}
+
+  /* ---------- header ---------- */
+  header{padding:36px 0 20px;border-bottom:3px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  h1{font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:6px}
+  h1 .accent{color:var(--green)}
+  .subtitle{margin-top:8px;color:var(--muted);font-size:14px}
+  .subtitle.pace{font-family:var(--mono);font-size:12.5px;color:var(--muted);opacity:.85;margin-top:10px}
+
+  /* ---------- week strip (signature) ---------- */
+  .weekstrip{
+    background:#1a2620;border:1.5px solid #2c4a38;color:var(--ink);border-radius:14px;
+    padding:20px;margin-top:22px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;
+  }
+  .weekstrip .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);opacity:.9}
+  .weekstrip .big{font-size:15px;font-weight:700;margin-top:2px}
+  .reps{display:flex;gap:14px;align-items:center}
+  .rep{
+    width:44px;height:44px;border-radius:50%;border:2.5px solid rgba(230,232,239,.28);
+    background:transparent;cursor:pointer;font-size:18px;color:var(--ink);
+    display:flex;align-items:center;justify-content:center;transition:all .15s ease;
+    font-family:var(--mono);
+  }
+  .rep:hover{border-color:var(--ink);transform:scale(1.06)}
+  .rep:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+  .rep.done{background:var(--green);border-color:var(--green);color:#0d1a12;font-weight:700}
+  .weekmsg{font-size:13px;color:var(--muted);width:100%;font-family:var(--mono)}
+  .weekhistory{font-family:var(--mono);font-size:12px;color:var(--muted);opacity:.7;width:100%}
+
+  /* ---------- overall progress ---------- */
+  .overall{margin-top:18px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:18px 20px}
+  .overall .row{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+  .overall .pct{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--green)}
+  .bar{height:10px;background:var(--green-soft);border-radius:6px;margin-top:10px;overflow:hidden}
+  .bar>div{height:100%;background:var(--green);border-radius:6px;width:0;transition:width .4s ease}
+  .legend{display:flex;gap:16px;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--muted);flex-wrap:wrap}
+
+  /* ---------- rules ---------- */
+  details.rules{margin-top:18px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+  details.rules summary{
+    cursor:pointer;padding:14px 20px;font-weight:700;font-size:14px;list-style:none;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  details.rules summary::-webkit-details-marker{display:none}
+  details.rules summary::after{content:'+';font-family:var(--mono);font-size:18px;color:var(--muted)}
+  details.rules[open] summary::after{content:'–'}
+  details.rules summary:focus-visible{outline:3px solid var(--green);outline-offset:-3px}
+  .rulesbody{padding:0 20px 18px;font-size:14px;color:var(--ink)}
+  .rulesbody h3{font-size:12px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin:16px 0 6px}
+  .rulesbody ul{padding-left:18px}
+  .rulesbody li{margin-bottom:5px;color:#c9cfdd}
+  .rulesbody strong{font-weight:700;color:var(--ink)}
+
+  /* ---------- phases ---------- */
+  .phases{margin-top:34px}
+  .phases-title{font-size:12px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .phase{
+    background:var(--card);border:1.5px solid var(--line);border-radius:14px;
+    margin-bottom:16px;overflow:hidden;position:relative;
+  }
+  .phase.closed{border-color:var(--green-dim)}
+  .phase.closed .phase-head{background:var(--green-soft)}
+  .phase-head{padding:16px 20px;display:flex;gap:14px;align-items:flex-start;cursor:pointer;user-select:none}
+  .phase-head:focus-visible{outline:3px solid var(--green);outline-offset:-3px}
+  .phase-num{
+    font-family:var(--mono);font-weight:700;font-size:13px;color:var(--ink);background:var(--line);
+    min-width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .phase.closed .phase-num{background:var(--green);color:#0d1a12}
+  .phase-head-main{flex:1;min-width:0}
+  .phase-head h2{font-size:16px;font-weight:750;letter-spacing:-.01em}
+  .phase-cue{font-size:13px;color:var(--muted);margin-top:2px}
+  .phase-stat{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;padding-top:4px}
+  .phase-body{display:none;border-top:1.5px solid var(--line)}
+  .phase.open .phase-body{display:block}
+  .pattern-note{padding:14px 20px;background:var(--card-2);font-size:13.5px;border-bottom:1px solid var(--line);color:#c9cfdd}
+  .pattern-note strong{color:var(--green)}
+  .pattern-note code{font-family:var(--mono);font-size:12px;background:#12141a;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--ink)}
+  .pattern-note em{color:var(--ink);font-style:italic}
+
+  /* ---------- learn strip ---------- */
+  .learn{padding:12px 20px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#171a22}
+  .learn-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .learnlink{
+    display:inline-block;font-size:13px;font-weight:600;text-decoration:none;
+    color:var(--accent);background:var(--accent-soft);border:1px solid #2c3660;
+    border-radius:8px;padding:6px 11px;transition:.12s;
+  }
+  .learnlink:hover{background:#26305a;border-color:var(--accent)}
+  .learnlink:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .learn.learn-empty{font-size:12.5px;color:var(--muted);font-style:italic;font-family:inherit}
+
+  .problem{
+    display:flex;align-items:center;gap:12px;padding:11px 20px;
+    border-bottom:1px solid var(--line);font-size:14px;
+  }
+  .problem:last-child{border-bottom:none}
+  .status-btn{
+    font-family:var(--mono);font-size:12px;font-weight:700;min-width:58px;text-align:center;
+    padding:5px 0;border-radius:8px;border:1.5px solid var(--line);background:var(--card-2);cursor:pointer;
+    color:var(--muted);transition:all .12s ease;flex-shrink:0;
+  }
+  .status-btn:hover{border-color:var(--muted)}
+  .status-btn:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+  .status-btn[data-s="1"]{background:var(--green);border-color:var(--green);color:#0d1a12}
+  .status-btn[data-s="2"]{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+  .status-btn[data-s="3"]{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+  .problem-name{flex:1;min-width:0}
+  .problem-name a{color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--muted)}
+  .problem-name a:hover{color:var(--green);border-color:var(--green)}
+  .problem-name .lc{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-left:6px}
+  .problem.optional .problem-name::after{content:'stretch';font-family:var(--mono);font-size:10px;color:var(--amber);border:1px solid var(--amber);border-radius:5px;padding:1px 5px;margin-left:8px}
+
+  /* ---------- revision queue ---------- */
+  .revision{margin-top:34px;background:var(--card);border:1.5px solid #5a4413;border-radius:14px;padding:18px 20px}
+  .revision h2{font-size:15px;display:flex;align-items:center;gap:8px}
+  .revision h2::before{content:'↻';font-family:var(--mono);color:var(--amber);font-size:18px}
+  .revision p.hint{font-size:13px;color:var(--muted);margin-top:4px}
+  #revList{margin-top:12px;font-size:14px}
+  #revList .rev-item{padding:7px 0;border-bottom:1px dashed var(--line);display:flex;gap:10px;align-items:center}
+  #revList .rev-item:last-child{border-bottom:none}
+  #revList .tag{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:6px;flex-shrink:0}
+  #revList .tag.h{background:var(--amber-soft);color:var(--amber)}
+  #revList .tag.f{background:var(--red-soft);color:var(--red)}
+  #revList .empty{color:var(--muted);font-size:13px;padding:6px 0}
+
+  /* ---------- library ---------- */
+  .library{margin-top:34px}
+  .library-title{font-size:12px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .library-lede{font-size:13px;color:var(--muted);margin-bottom:14px}
+  .lib-group h3{font-size:13px;margin:18px 0 10px;display:flex;align-items:center;gap:9px;font-weight:700}
+  .lib-group h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+  .lib-list{display:flex;flex-direction:column;gap:10px}
+  a.libcard{
+    display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;text-decoration:none;color:var(--ink);transition:.12s;
+  }
+  a.libcard:hover{border-color:var(--accent);background:#20263a}
+  a.libcard:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  a.libcard .num{font-family:var(--mono);font-size:11.5px;color:var(--accent);font-weight:700}
+  a.libcard .title{font-size:15px;font-weight:600;margin-top:2px}
+  a.libcard .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+
+  /* ---------- footer tools ---------- */
+  .tools{margin-top:34px;display:flex;gap:10px;flex-wrap:wrap}
+  .tools button{
+    font-family:var(--mono);font-size:12.5px;padding:10px 16px;border-radius:10px;cursor:pointer;
+    border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;transition:.12s;
+  }
+  .tools button:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .tools button:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+  .tools button.danger{border-color:#5a2626;color:var(--red)}
+  .tools button.danger:hover{background:var(--red);border-color:var(--red);color:#1a0d0d}
+  .footnote{margin-top:16px;font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.7}
+
+  /* toast */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:#2f3543;color:var(--ink);padding:11px 20px;border-radius:10px;border:1px solid var(--line);
+    font-family:var(--mono);font-size:13px;transition:transform .25s ease;z-index:50;max-width:90vw;
+  }
+  #toast.show{transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:560px){
+    .weekstrip{flex-direction:column;align-items:flex-start}
+    .phase-stat{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">DSA Filter Round · MERN dev · 3 yrs exp · target 15–20 LPA</div>
+  <h1>Show up <span class="accent">3 times</span> a week.<br>That's the whole plan.</h1>
+  <div class="subtitle">Scope: Arrays · HashMap · Two Pointer · Sliding Window · Strings · Binary Search · LinkedList · Tree traversals · Recursion · Easy DP. Nothing else. No graphs, no hard DP, no tries.</div>
+  <div class="subtitle pace" id="paceLine"></div>
+</header>
+
+<!-- WEEK STRIP -->
+<div class="weekstrip">
+  <div>
+    <div class="label">This week's sessions · floor = 3</div>
+    <div class="big" id="weekLabel">Week of —</div>
+  </div>
+  <div class="reps" role="group" aria-label="Session counter for this week">
+    <button class="rep" id="rep1" aria-label="Session 1">1</button>
+    <button class="rep" id="rep2" aria-label="Session 2">2</button>
+    <button class="rep" id="rep3" aria-label="Session 3">3</button>
+  </div>
+  <div class="weekmsg" id="weekMsg"></div>
+  <div class="weekhistory" id="weekHistory"></div>
+</div>
+
+<!-- OVERALL -->
+<div class="overall">
+  <div class="row">
+    <strong style="font-size:14px">Overall progress <span style="color:var(--muted);font-weight:400">(✅ only — hints don't count)</span></strong>
+    <span class="pct" id="pct">0%</span>
+  </div>
+  <div class="bar"><div id="barFill"></div></div>
+  <div class="legend">
+    <span>✅ <span id="cSolved">0</span> solo</span>
+    <span>🟡 <span id="cHint">0</span> with hints</span>
+    <span>❌ <span id="cFail">0</span> needed solution</span>
+    <span>◻ <span id="cTodo">0</span> untouched</span>
+  </div>
+</div>
+
+<!-- RULES -->
+<details class="rules">
+  <summary>The rules (read once, then obey)</summary>
+  <div class="rulesbody">
+    <h3>The floor</h3>
+    <ul>
+      <li><strong>3 sessions per week. Any day, any time.</strong> Total freedom inside the week, zero freedom about the week.</li>
+      <li>Week runs Monday → Sunday. 3/3 = week closed. Under 3 = tracker shows it. No hiding.</li>
+      <li>Two weeks in a row under 2 sessions → drop the floor to 2/week or pause properly. No zombie-dragging.</li>
+    </ul>
+    <h3>Session structure (40 min, every time)</h3>
+    <ul>
+      <li><strong>2 min</strong> — recap where you are (look at this page)</li>
+      <li><strong>8 min</strong> — read the pattern for today's problem (open the phase's lesson if one exists)</li>
+      <li><strong>25 min</strong> — attempt the problem, <strong>narrating your reasoning out loud</strong>. This is the actual 2026 interview skill — proctored rounds test if you can think clearly and explain, not just recall.</li>
+      <li><strong>5 min</strong> — check solution, verify time/space complexity, mark status honestly</li>
+    </ul>
+    <h3>Status marks (be honest — lying only wastes your own weeks)</h3>
+    <ul>
+      <li><strong>✅ Solo</strong> — solved with no hints, no peeking. Only these count toward progress.</li>
+      <li><strong>🟡 Hints</strong> — needed a nudge. Goes to revision queue.</li>
+      <li><strong>❌ Solution</strong> — needed the full answer. Goes to revision queue. Re-attempt from scratch after 3+ days.</li>
+      <li>A phase only closes when <strong>every problem is ✅</strong>. Repeat problems until they are. Slow is fine, fake isn't.</li>
+    </ul>
+    <h3>The lazy-person protocol</h3>
+    <ul>
+      <li><strong>The 5-minute rule:</strong> your only commitment is to open the problem. Starting is the whole battle.</li>
+      <li>Dead-energy day? Do one revision-queue problem in 15 min. It counts as a session. Something &gt; nothing.</li>
+      <li>Missed a session? Skip it. Never double up next day — that's the burnout path.</li>
+      <li><strong>1 rest day minimum per week. Mandatory.</strong> It's part of the plan, not a break from it.</li>
+    </ul>
+    <h3>Anti-AI-crutch rule</h3>
+    <ul>
+      <li>Solve first, alone, in a plain editor. Online assessments in 2026 are proctored with anti-cheat — you must be able to do this bare-hands.</li>
+      <li>After marking status, you MAY ask an AI to review your solution like a senior would. Never before.</li>
+    </ul>
+  </div>
+</details>
+
+<!-- PHASES -->
+<div class="phases">
+  <div class="phases-title" id="phasesTitle">The curriculum</div>
+  <div id="phaseContainer"></div>
+</div>
+
+<!-- REVISION -->
+<div class="revision">
+  <h2>Revision queue</h2>
+  <p class="hint">Everything marked 🟡 or ❌ lands here automatically. Weekend session = pick 1–2 from here, re-solve from scratch, upgrade to ✅.</p>
+  <div id="revList"></div>
+</div>
+
+<!-- LIBRARY -->
+<div class="library">
+  <div class="library-title">Lessons &amp; reference cards</div>
+  <p class="library-lede" id="libLede"></p>
+  <div id="libContainer"></div>
+</div>
+
+<!-- TOOLS -->
+<div class="tools">
+  <button id="btnExport">Copy backup</button>
+  <button id="btnImport">Restore backup</button>
+  <button id="btnReset" class="danger">Reset everything</button>
+</div>
+<p class="footnote">
+  Progress saves automatically in this browser (localStorage, key <code>dsaTracker.v1</code>).<br>
+  Chrome shares that storage across every local file; Firefox scopes it per file. Either way: copy a backup before you rename, move, or switch browsers.
+</p>
+
+</div><!-- /wrap -->
+
+<div id="toast" role="status"></div>
+
+<script>
+'use strict';
+
+// ---------------- DATA ----------------
+// NOTE ON IDS: problem ids are the localStorage keys. They are frozen — never
+// renumber them when inserting a phase, or saved progress silently reattaches
+// to the wrong problem. New phases get a fresh id namespace instead. Phase
+// numbers shown on screen come from array order, so reordering is free.
+const PHASES = [
+  {
+    id:'p1', title:'Arrays + Big-O', cue:'Traversal, prefix sums, in-place tricks. 40% of interview problems live here.',
+    note:'<strong>Pattern:</strong> Before coding, say the brute force + its Big-O out loud. Then ask: "can one pass with a running value (max/sum/count) replace nested loops?" Kadane, prefix sums, and buy-sell all reduce O(n²) → O(n) this way.',
+    learn:{
+      lesson:{href:'lessons/0001-big-o-through-javascript.html', num:'Lesson 01', title:'Big-O Through JavaScript', sub:'Complexity foundation — how to reason about time/space cost.'},
+      ref:{href:'reference/big-o-cheatsheet.html', num:'Ref 01', title:'Big-O Cheatsheet', sub:'Complexity classes, common operation costs, growth chart.'}
+    },
+    problems:[
+      {id:'p1a', lc:1929, name:'Concatenation of Array', slug:'concatenation-of-array'},
+      {id:'p1b', lc:485,  name:'Max Consecutive Ones', slug:'max-consecutive-ones'},
+      {id:'p1c', lc:121,  name:'Best Time to Buy and Sell Stock', slug:'best-time-to-buy-and-sell-stock'},
+      {id:'p1d', lc:53,   name:'Maximum Subarray (Kadane)', slug:'maximum-subarray'},
+      {id:'p1e', lc:283,  name:'Move Zeroes', slug:'move-zeroes'},
+      {id:'p1f', lc:303,  name:'Range Sum Query — prefix sum', slug:'range-sum-query-immutable'},
+      {id:'p1g', lc:238,  name:'Product of Array Except Self', slug:'product-of-array-except-self'},
+      {id:'p1h', lc:189,  name:'Rotate Array', slug:'rotate-array'}
+    ]
+  },
+  {
+    id:'p2', title:'HashMap pattern', cue:'Frequency counting + "have I seen this before?" — the highest-ROI pattern in interviews.',
+    note:'<strong>Pattern:</strong> Whenever the brute force is "for each element, scan the rest," a Map/Set kills the inner loop. Two flavors: <em>lookup</em> (Two Sum: store what you need, check as you go) and <em>frequency</em> (anagrams: count characters). In JS use <code>Map</code>/<code>Set</code>, not plain objects.',
+    learn:{
+      lesson:{href:'lessons/0002-two-sum-hashing-pattern.html', num:'Lesson 02', title:'Two Sum & the Hashing Pattern', sub:'Map/Set for O(1) lookups — Two Sum, Contains Duplicate, Valid Anagram.'},
+      ref:{href:'reference/hashing-pattern.html', num:'Ref 02', title:'The Hashing Pattern', sub:'When to reach for Map/Set, template snippets, under-the-hood O(1).'}
+    },
+    problems:[
+      {id:'p2a', lc:217, name:'Contains Duplicate', slug:'contains-duplicate'},
+      {id:'p2b', lc:1,   name:'Two Sum', slug:'two-sum'},
+      {id:'p2c', lc:242, name:'Valid Anagram', slug:'valid-anagram'},
+      {id:'p2d', lc:387, name:'First Unique Character', slug:'first-unique-character-in-a-string'},
+      {id:'p2e', lc:49,  name:'Group Anagrams', slug:'group-anagrams'},
+      {id:'p2f', lc:205, name:'Isomorphic Strings', slug:'isomorphic-strings'},
+      {id:'p2g', lc:560, name:'Subarray Sum Equals K', slug:'subarray-sum-equals-k'},
+      {id:'p2h', lc:128, name:'Longest Consecutive Sequence', slug:'longest-consecutive-sequence'}
+    ]
+  },
+  {
+    id:'p3', title:'Two Pointer', cue:'Sorted data or pair-hunting → walk from both ends instead of nesting loops.',
+    note:'<strong>Pattern:</strong> Two triggers: (1) array is <em>sorted</em> → pointers at both ends, move the one that helps; (2) <em>in-place rewrite</em> → slow pointer writes, fast pointer reads. Turns O(n²) into O(n) with O(1) space.',
+    learn:null,
+    problems:[
+      {id:'p3a', lc:125, name:'Valid Palindrome', slug:'valid-palindrome'},
+      {id:'p3b', lc:167, name:'Two Sum II (sorted)', slug:'two-sum-ii-input-array-is-sorted'},
+      {id:'p3c', lc:26,  name:'Remove Duplicates from Sorted Array', slug:'remove-duplicates-from-sorted-array'},
+      {id:'p3d', lc:88,  name:'Merge Sorted Array', slug:'merge-sorted-array'},
+      {id:'p3e', lc:11,  name:'Container With Most Water', slug:'container-with-most-water'},
+      {id:'p3f', lc:15,  name:'3Sum', slug:'3sum'}
+    ]
+  },
+  {
+    id:'p4', title:'Sliding Window', cue:'"Longest/shortest subarray or substring satisfying X" — the phrase itself is the signal.',
+    note:'<strong>Pattern:</strong> Fixed window: slide, add the entering element, remove the leaving one. Variable window: expand <code>right</code> greedily, shrink <code>left</code> only while the window is invalid. Track window state with a Map. Say the invariant out loud every time.',
+    learn:null,
+    problems:[
+      {id:'p4a', lc:643, name:'Max Average Subarray I (fixed)', slug:'maximum-average-subarray-i'},
+      {id:'p4b', lc:3,   name:'Longest Substring Without Repeating', slug:'longest-substring-without-repeating-characters'},
+      {id:'p4c', lc:209, name:'Minimum Size Subarray Sum', slug:'minimum-size-subarray-sum'},
+      {id:'p4d', lc:424, name:'Longest Repeating Character Replacement', slug:'longest-repeating-character-replacement'},
+      {id:'p4e', lc:567, name:'Permutation in String', slug:'permutation-in-string'},
+      {id:'p4f', lc:76,  name:'Minimum Window Substring', slug:'minimum-window-substring', optional:true}
+    ]
+  },
+  {
+    id:'p5', title:'Strings + mixed revision', cue:'String manipulation, then re-solve your 5 weakest from phases 1–4.',
+    note:'<strong>Pattern:</strong> Strings are immutable in JS — build with arrays + <code>join</code>. "Expand around center" for palindromes. This phase is 50% revision on purpose: clear your entire 🟡/❌ queue from phases 1–4 before moving on. That IS the phase.',
+    learn:null,
+    problems:[
+      {id:'p5a', lc:344, name:'Reverse String', slug:'reverse-string'},
+      {id:'p5b', lc:14,  name:'Longest Common Prefix', slug:'longest-common-prefix'},
+      {id:'p5c', lc:151, name:'Reverse Words in a String', slug:'reverse-words-in-a-string'},
+      {id:'p5d', lc:443, name:'String Compression', slug:'string-compression'},
+      {id:'p5e', lc:5,   name:'Longest Palindromic Substring', slug:'longest-palindromic-substring'}
+    ]
+  },
+  {
+    id:'pbs', title:'Binary Search', cue:'Sorted input + "find X fast" → throw away half the search space every step. O(log n).',
+    note:'<strong>Pattern:</strong> The invariant is the whole game: <em>if the answer exists, it is always inside [lo, hi]</em>. Loop <code>while (lo &lt;= hi)</code>, take <code>mid = Math.floor((lo + hi) / 2)</code>, then discard the half that <em>cannot</em> contain the answer. Rotated-array variants are the same loop with one extra question first: "which half is sorted?" — search that half if the target is in its range, else the other. <em>Senior note:</em> the famous <code>lo + (hi - lo) / 2</code> trick guards against integer overflow in Java/C++; JS numbers are 64-bit floats so it is not needed here — but know why it exists, because interviewers ask.',
+    learn:null,
+    problems:[
+      {id:'pbsa', lc:704, name:'Binary Search', slug:'binary-search'},
+      {id:'pbsb', lc:35,  name:'Search Insert Position', slug:'search-insert-position'},
+      {id:'pbsc', lc:278, name:'First Bad Version', slug:'first-bad-version'},
+      {id:'pbsd', lc:74,  name:'Search a 2D Matrix', slug:'search-a-2d-matrix'},
+      {id:'pbse', lc:33,  name:'Search in Rotated Sorted Array', slug:'search-in-rotated-sorted-array'},
+      {id:'pbsf', lc:153, name:'Find Minimum in Rotated Sorted Array', slug:'find-minimum-in-rotated-sorted-array', optional:true}
+    ]
+  },
+  {
+    id:'p6', title:'LinkedList basics', cue:'Five problems, three tools: prev/curr rewiring, slow-fast pointers, dummy head.',
+    note:'<strong>Pattern:</strong> Every basic LinkedList question is one of: (1) <em>rewire</em> with prev/curr/next (reverse), (2) <em>slow-fast</em> pointers (middle, cycle), (3) <em>dummy head</em> to avoid edge cases (merge, remove). Draw boxes and arrows on paper before coding — always.',
+    learn:null,
+    problems:[
+      {id:'p6a', lc:206, name:'Reverse Linked List', slug:'reverse-linked-list'},
+      {id:'p6b', lc:876, name:'Middle of the Linked List', slug:'middle-of-the-linked-list'},
+      {id:'p6c', lc:141, name:'Linked List Cycle', slug:'linked-list-cycle'},
+      {id:'p6d', lc:21,  name:'Merge Two Sorted Lists', slug:'merge-two-sorted-lists'},
+      {id:'p6e', lc:19,  name:'Remove Nth Node From End', slug:'remove-nth-node-from-end-of-list'}
+    ]
+  },
+  {
+    id:'p7', title:'Recursion + Tree traversals', cue:'Trust the recursion: define what f(node) returns, handle null, combine children.',
+    note:'<strong>Pattern:</strong> Every tree problem here is: base case (<code>if (!node) return ...</code>) + recurse left + recurse right + combine. Don\'t trace the whole call stack — state what the function <em>promises</em> to return and trust it. BFS (level order) is the one exception: use a queue, process level by level.',
+    learn:null,
+    problems:[
+      {id:'p7a', lc:509, name:'Fibonacci (recursion warmup)', slug:'fibonacci-number'},
+      {id:'p7b', lc:104, name:'Maximum Depth of Binary Tree', slug:'maximum-depth-of-binary-tree'},
+      {id:'p7c', lc:226, name:'Invert Binary Tree', slug:'invert-binary-tree'},
+      {id:'p7d', lc:100, name:'Same Tree', slug:'same-tree'},
+      {id:'p7e', lc:94,  name:'Binary Tree Inorder Traversal', slug:'binary-tree-inorder-traversal'},
+      {id:'p7f', lc:102, name:'Level Order Traversal (BFS)', slug:'binary-tree-level-order-traversal'}
+    ]
+  },
+  {
+    id:'p8', title:'Easy DP + mock week', cue:'DP = recursion + memory. Then two timed mocks — the dress rehearsal.',
+    note:'<strong>Pattern:</strong> Ask: "answer for step n = some combination of answers for smaller steps?" Write the recurrence in one line first (e.g. <code>f(n) = f(n-1) + f(n-2)</code>), then fill an array bottom-up. <strong>Mocks:</strong> 2 unseen problems, 60 min, webcam-style pressure — solve while talking out loud the entire time. No pauses, no peeking. This simulates the real proctored round.',
+    learn:null,
+    problems:[
+      {id:'p8a', lc:70,  name:'Climbing Stairs', slug:'climbing-stairs'},
+      {id:'p8b', lc:746, name:'Min Cost Climbing Stairs', slug:'min-cost-climbing-stairs'},
+      {id:'p8c', lc:198, name:'House Robber', slug:'house-robber'},
+      {id:'p8d', lc:322, name:'Coin Change', slug:'coin-change'},
+      {id:'p8e', lc:118, name:'Pascal\'s Triangle', slug:'pascals-triangle'},
+      {id:'p8f', lc:0,   name:'MOCK 1 — two unseen easy/mediums, 60 min, talk out loud', slug:''},
+      {id:'p8g', lc:0,   name:'MOCK 2 — two unseen easy/mediums, 60 min, talk out loud', slug:''}
+    ]
+  }
+];
+
+// ---------------- STATE ----------------
+const KEY = 'dsaTracker.v1';
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){ const s = JSON.parse(raw); if(s && typeof s==='object') return {problems:s.problems||{}, weeks:s.weeks||{}, openPhase:s.openPhase||null}; }
+  }catch(e){ console.error('load failed', e); }
+  return {problems:{}, weeks:{}, openPhase:null};
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ toast('Save failed — browser blocked storage'); }
+}
+
+// Monday-based week key: YYYY-MM-DD of that week's Monday
+function weekKey(d = new Date()){
+  const day = (d.getDay()+6)%7; // Mon=0
+  const mon = new Date(d); mon.setDate(d.getDate()-day);
+  const y=mon.getFullYear(), m=String(mon.getMonth()+1).padStart(2,'0'), dd=String(mon.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+function weekLabelText(){
+  const wk = weekKey();
+  const mon = new Date(wk+'T00:00:00');
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const f = dt => dt.toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  return `Week of ${f(mon)} – ${f(sun)}`;
+}
+
+// ---------------- HEADER MATH ----------------
+function renderPace(){
+  const total = PHASES.reduce((n,ph)=>n+ph.problems.length, 0);
+  const weeks = Math.ceil(total/3);
+  const months = (weeks/4.33).toFixed(1);
+  document.getElementById('phasesTitle').textContent =
+    `The curriculum · ${PHASES.length} phases · ${total} items · JavaScript only`;
+  document.getElementById('paceLine').textContent =
+    `${total} items · 3 sessions a week · ~${weeks} weeks (${months} months) if you never repeat one — and you will repeat. Budget 4–6 months.`;
+}
+
+// ---------------- RENDER: PHASES ----------------
+const STATUS_LABEL = {0:'todo', 1:'✅', 2:'🟡', 3:'❌'};
+const container = document.getElementById('phaseContainer');
+
+function learnStripHTML(ph){
+  if(!ph.learn){
+    return `<div class="learn learn-empty">No lesson written for this phase yet — ask Claude for it when you get here.</div>`;
+  }
+  const bits = [];
+  if(ph.learn.lesson) bits.push(`<a class="learnlink" href="${ph.learn.lesson.href}">📘 ${ph.learn.lesson.num} · ${ph.learn.lesson.title}</a>`);
+  if(ph.learn.ref)    bits.push(`<a class="learnlink" href="${ph.learn.ref.href}">🔖 ${ph.learn.ref.num} · ${ph.learn.ref.title}</a>`);
+  return `<div class="learn"><span class="learn-label">Read first</span>${bits.join('')}</div>`;
+}
+
+function buildPhases(){
+  container.innerHTML = '';
+  PHASES.forEach((ph, idx) => {
+    const el = document.createElement('div');
+    el.className = 'phase';
+    el.id = ph.id;
+
+    const head = document.createElement('div');
+    head.className = 'phase-head';
+    head.setAttribute('role','button');
+    head.setAttribute('tabindex','0');
+    head.setAttribute('aria-expanded','false');
+    head.innerHTML = `
+      <div class="phase-num">${idx+1}</div>
+      <div class="phase-head-main">
+        <h2>${ph.title}</h2>
+        <div class="phase-cue">${ph.cue}</div>
+      </div>
+      <div class="phase-stat" id="stat-${ph.id}"></div>`;
+    const togglePhase = () => {
+      const opening = !el.classList.contains('open');
+      document.querySelectorAll('.phase.open').forEach(p=>{p.classList.remove('open');p.querySelector('.phase-head').setAttribute('aria-expanded','false');});
+      if(opening){ el.classList.add('open'); head.setAttribute('aria-expanded','true'); state.openPhase = ph.id; }
+      else{ state.openPhase = null; }
+      save();
+    };
+    head.addEventListener('click', togglePhase);
+    head.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();togglePhase();} });
+    el.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'phase-body';
+    body.innerHTML = `<div class="pattern-note">${ph.note}</div>` + learnStripHTML(ph);
+
+    ph.problems.forEach(pr => {
+      const row = document.createElement('div');
+      row.className = 'problem' + (pr.optional ? ' optional' : '');
+      const link = pr.slug
+        ? `<a href="https://leetcode.com/problems/${pr.slug}/" target="_blank" rel="noopener">${pr.name}</a><span class="lc">${pr.lc ? 'LC '+pr.lc : ''}</span>`
+        : `<span>${pr.name}</span>`;
+      row.innerHTML = `<button class="status-btn" data-id="${pr.id}" aria-label="Cycle status for ${pr.name}"></button><div class="problem-name">${link}</div>`;
+      body.appendChild(row);
+    });
+    el.appendChild(body);
+    container.appendChild(el);
+  });
+
+  container.querySelectorAll('.status-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      const cur = state.problems[id]||0;
+      state.problems[id] = (cur+1)%4;
+      save(); refresh();
+    });
+  });
+
+  if(state.openPhase){
+    const el = document.getElementById(state.openPhase);
+    if(el){ el.classList.add('open'); el.querySelector('.phase-head').setAttribute('aria-expanded','true'); }
+  }
+}
+
+function refresh(){
+  let solved=0, hint=0, fail=0, total=0;
+  const revItems=[];
+
+  PHASES.forEach(ph=>{
+    let phSolved=0;
+    ph.problems.forEach(pr=>{
+      total++;
+      const s = state.problems[pr.id]||0;
+      if(s===1){solved++;phSolved++;}
+      else if(s===2){hint++;revItems.push({pr,s});}
+      else if(s===3){fail++;revItems.push({pr,s});}
+      const btn = document.querySelector(`.status-btn[data-id="${pr.id}"]`);
+      if(btn){ btn.dataset.s = s; btn.textContent = s===0?'todo':STATUS_LABEL[s]; }
+    });
+    const statEl = document.getElementById('stat-'+ph.id);
+    const closed = phSolved===ph.problems.length;
+    if(statEl) statEl.textContent = closed ? 'CLOSED ✓' : `${phSolved}/${ph.problems.length} ✅`;
+    document.getElementById(ph.id).classList.toggle('closed', closed);
+  });
+
+  const pct = total? Math.round(solved/total*100) : 0;
+  document.getElementById('pct').textContent = pct+'%';
+  document.getElementById('barFill').style.width = pct+'%';
+  document.getElementById('cSolved').textContent = solved;
+  document.getElementById('cHint').textContent = hint;
+  document.getElementById('cFail').textContent = fail;
+  document.getElementById('cTodo').textContent = total-solved-hint-fail;
+
+  // revision queue
+  const rev = document.getElementById('revList');
+  if(!revItems.length){
+    rev.innerHTML = '<div class="empty">Queue is empty. Either you just started, or you\'re doing great.</div>';
+  } else {
+    rev.innerHTML = revItems.map(({pr,s})=>{
+      const tag = s===2 ? '<span class="tag h">🟡 hints</span>' : '<span class="tag f">❌ solution</span>';
+      const nm = pr.slug ? `<a href="https://leetcode.com/problems/${pr.slug}/" target="_blank" rel="noopener" style="color:var(--ink)">${pr.name}</a>` : pr.name;
+      return `<div class="rev-item">${tag}<span>${nm}${pr.lc?` <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">LC ${pr.lc}</span>`:''}</span></div>`;
+    }).join('');
+  }
+
+  renderWeek();
+}
+
+// ---------------- LIBRARY ----------------
+// Derived from PHASES so a new lesson is a one-place edit.
+function buildLibrary(){
+  const lessons=[], refs=[];
+  PHASES.forEach(ph=>{
+    if(!ph.learn) return;
+    if(ph.learn.lesson) lessons.push({...ph.learn.lesson, phase:ph.title});
+    if(ph.learn.ref)    refs.push({...ph.learn.ref, phase:ph.title});
+  });
+
+  const withLessons = PHASES.filter(p=>p.learn && p.learn.lesson).length;
+  document.getElementById('libLede').textContent =
+    `${withLessons} of ${PHASES.length} phases have a written lesson. The rest have pattern notes only — that gap is the writing queue.`;
+
+  const card = it => `
+    <a class="libcard" href="${it.href}">
+      <div class="num">${it.num}</div>
+      <div class="title">${it.title}</div>
+      <div class="sub">${it.sub}</div>
+    </a>`;
+
+  const group = (heading, items) => `
+    <div class="lib-group">
+      <h3><span class="dot"></span>${heading}</h3>
+      <div class="lib-list">${items.map(card).join('')}</div>
+    </div>`;
+
+  document.getElementById('libContainer').innerHTML =
+    group('Lessons', lessons) + group('Reference cards', refs);
+}
+
+// ---------------- WEEK STRIP ----------------
+function renderWeek(){
+  const wk = weekKey();
+  const count = state.weeks[wk]||0;
+  document.getElementById('weekLabel').textContent = weekLabelText();
+  for(let i=1;i<=3;i++){
+    const rep = document.getElementById('rep'+i);
+    rep.classList.toggle('done', count>=i);
+    rep.textContent = count>=i ? '✓' : String(i);
+  }
+  const msgs = {
+    0:'0/3 — the only hard part is opening the problem. 5-minute rule.',
+    1:'1/3 — one down. Momentum is real, use it.',
+    2:'2/3 — one more closes the week.',
+    3:'3/3 — WEEK CLOSED. Rest is now mandatory, not optional.'
+  };
+  document.getElementById('weekMsg').textContent = msgs[Math.min(count,3)];
+
+  // history
+  const keys = Object.keys(state.weeks).filter(k=>k!==wk).sort();
+  const closedWeeks = keys.filter(k=>state.weeks[k]>=3).length;
+  const totalWeeks = keys.length;
+  document.getElementById('weekHistory').textContent = totalWeeks
+    ? `History: ${closedWeeks}/${totalWeeks} past weeks closed (3+ sessions)`
+    : 'History: no past weeks yet — this is week one.';
+}
+
+[1,2,3].forEach(i=>{
+  document.getElementById('rep'+i).addEventListener('click', ()=>{
+    const wk = weekKey();
+    const cur = state.weeks[wk]||0;
+    // clicking dot i sets count to i; clicking the current last dot undoes it
+    state.weeks[wk] = (cur===i) ? i-1 : i;
+    save(); renderWeek();
+    if(state.weeks[wk]===3) toast('Week closed. Go rest — that\'s an order.');
+  });
+});
+
+// ---------------- TOOLS ----------------
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+document.getElementById('btnExport').addEventListener('click', async ()=>{
+  const data = JSON.stringify(state);
+  try{ await navigator.clipboard.writeText(data); toast('Backup copied to clipboard — paste it somewhere safe.'); }
+  catch(e){ prompt('Copy this backup string:', data); }
+});
+
+document.getElementById('btnImport').addEventListener('click', ()=>{
+  const raw = prompt('Paste your backup string:');
+  if(!raw) return;
+  try{
+    const s = JSON.parse(raw);
+    if(!s || typeof s!=='object' || !('problems' in s)) throw new Error('bad shape');
+    state = {problems:s.problems||{}, weeks:s.weeks||{}, openPhase:s.openPhase||null};
+    save(); buildPhases(); refresh(); toast('Backup restored.');
+  }catch(e){ toast('That backup string is invalid.'); }
+});
+
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  if(!confirm('Wipe ALL progress? This cannot be undone.')) return;
+  if(!confirm('Really sure? Every status and every week counter goes to zero.')) return;
+  state = {problems:{}, weeks:{}, openPhase:null};
+  save(); buildPhases(); refresh(); toast('Fresh start. Week one begins now.');
+});
+
+// ---------------- INIT ----------------
+renderPace();
+buildPhases();
+buildLibrary();
+refresh();
+</script>
+</body>
+</html>
