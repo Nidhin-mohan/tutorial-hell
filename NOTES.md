@@ -1,0 +1,5 @@
+# Notes
+
+- Project folder for the lab must be named `memory-leak` (not `memory-leak-lab` or similar) — corrected once, keep to it for any future scaffolding in this workspace.
+- Repo follows a branch-per-topic learning-log workflow (see root `README.md`): each topic lives on its own branch (`git learn <name>` / `git done`), branches kept forever. This topic is on the `memory-leaks` branch. Root `README.md` is the shared repo-wide doc — don't repurpose it for topic-specific content; use `memory-leak/README.md` instead.
+- User values empirically-verified claims over confident-sounding code: while building scenario 4's "fixed" version, a first attempt (naive `res.write()` loop) was shipped with a `// FIX:` comment claiming it solved the problem, then load-testing it directly disproved that (it used *more* peak memory than the leak it was meant to fix). Caught this by actually running the load test against both variants rather than trusting the code read right — worth continuing to empirically verify every "FIX" in this workspace by running it under load, not just reasoning about it.

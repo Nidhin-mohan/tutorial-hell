@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Node.js Memory Leak Diagnosis — Reference</title>
+<style>
+  :root {
+    --ink: #1a1d23;
+    --sub: #565d6b;
+    --line: #dfe3e8;
+    --bg: #ffffff;
+    --panel: #f6f7f9;
+    --accent: #9a3412;
+    --accent-bg: #fdf1eb;
+    --fix: #14532d;
+    --fix-bg: #eefbf1;
+    --mono: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e8eaed; --sub: #9aa3b2; --line: #33394a; --bg: #14161c;
+      --panel: #1b1e27; --accent: #fca57d; --accent-bg: #2a1c15;
+      --fix: #86efac; --fix-bg: #142a1c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    line-height: 1.55;
+  }
+  h1 { font-size: 1.7rem; margin-bottom: 0.2rem; }
+  .subtitle { color: var(--sub); margin-top: 0; margin-bottom: 2rem; font-size: 0.95rem; }
+  h2 {
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sub);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0.4rem;
+    margin-top: 2.5rem;
+  }
+  h3 { font-size: 1.05rem; margin-bottom: 0.4rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--sub); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  code {
+    font-family: var(--mono);
+    background: var(--panel);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+  pre code { background: none; padding: 0; }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+    background: var(--panel);
+  }
+  .leak-badge, .fix-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 5px;
+    margin-right: 0.4rem;
+  }
+  .leak-badge { color: var(--accent); background: var(--accent-bg); }
+  .fix-badge { color: var(--fix); background: var(--fix-bg); }
+  .glossary dt { font-weight: 600; margin-top: 0.9rem; }
+  .glossary dd { margin: 0.15rem 0 0; color: var(--sub); }
+  .tool-decision { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  @media (max-width: 640px) { .tool-decision { grid-template-columns: 1fr; } }
+  .sources { font-size: 0.85rem; color: var(--sub); }
+  .sources a { color: inherit; }
+  a { color: var(--accent); }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--sub); }
+  @media print {
+    body { max-width: none; padding: 0.5in; }
+    a { color: inherit; text-decoration: none; }
+    h2 { break-after: avoid; }
+    .card, table { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Node.js Memory Leak Diagnosis</h1>
+<p class="subtitle">Quick reference — the four common leak shapes, the diagnostic method, and the tool decision. Companion to the <code>memory-leak/</code> lab and <a href="../lessons/0001-heap-snapshot-diffing.html">Lesson 1</a>.</p>
+
+<h2>The method (memorize this loop)</h2>
+<div class="card">
+  <ol>
+    <li>Suspect a code path (an endpoint, a job, a connection type).</li>
+    <li>Take a heap snapshot <strong>before</strong>.</li>
+    <li>Exercise that code path under load for a while.</li>
+    <li>Take a heap snapshot <strong>after</strong>.</li>
+    <li>Compare the two — the diff is mostly what's leaking.</li>
+  </ol>
+  <p style="margin-bottom:0">This is the canonical technique from the <a href="https://nodejs.org/learn/diagnostics/memory/using-heap-snapshot">official Node.js diagnostics guide</a>. Everything else below is refinement of this loop.</p>
+</div>
+
+<h2>The four leak shapes</h2>
+
+<div class="card">
+  <h3>1. Unbounded cache</h3>
+  <p><span class="leak-badge">LEAK</span> A <code>Map</code>/object used as a cache with no max size and no TTL. Often disguised as "just memoizing" — the bug is usually a cache <em>key</em> that's accidentally unique per call (a timestamp, a request id), which also guarantees a 0% hit rate.</p>
+  <p><span class="fix-badge">FIX</span> Stable, low-cardinality key. Bound the size (evict oldest/least-recently-used). Add a TTL and evict lazily on read.</p>
+  <p><strong>Signature on a heap diff:</strong> one <code>Map</code>/object growing linearly with request count, holding many small, similar-shaped entries.</p>
+</div>
+
+<div class="card">
+  <h3>2. Dangling event listeners</h3>
+  <p><span class="leak-badge">LEAK</span> <code>emitter.on(event, handler)</code> called once per connection/request with no matching <code>.off()</code>/<code>.removeListener()</code> when that connection ends.</p>
+  <p><span class="fix-badge">FIX</span> Remove the listener on the natural teardown event for that resource — for an HTTP response, that's <code>res.on('close', () => emitter.off(event, handler))</code>.</p>
+  <p><strong>Signature:</strong> Node itself often tells you first — past 10 listeners on one event name, it logs <code>MaxListenersExceededWarning: Possible EventEmitter memory leak detected</code>. Don't silence this with <code>setMaxListeners()</code> before understanding why it fired.</p>
+</div>
+
+<div class="card">
+  <h3>3. Uncleared timers / closures</h3>
+  <p><span class="leak-badge">LEAK</span> <code>setInterval</code>/<code>setTimeout</code> created per-entity (per request, per record) with the handle discarded — nothing can ever call <code>clearInterval</code>/<code>clearTimeout</code> on it. The timer's closure also keeps every variable it references alive for as long as the timer runs — i.e. forever.</p>
+  <p><span class="fix-badge">FIX</span> Store the handle (e.g. in a <code>Map&lt;id, Timeout&gt;</code>) and clear it from <em>every</em> code path that ends that entity's life: natural expiry, explicit delete, and error paths.</p>
+  <p><strong>Signature:</strong> a growing count of active handles/timers that never shrinks, even long after the entities they were tracking are gone. <code>process._getActiveHandles()</code> (what <code>clinic doctor</code> samples) is a fast first check before reaching for heap snapshots.</p>
+</div>
+
+<div class="card">
+  <h3>4. Buffering instead of streaming</h3>
+  <p><span class="leak-badge">LEAK</span> A handler materializes an entire response body (string or array) in memory before sending it. Not a permanent leak — it's a <strong>peak-memory-under-concurrency</strong> problem: N concurrent requests means N full buffers alive at once.</p>
+  <p><span class="fix-badge">FIX</span> Stream rows out as they're generated. In Node, the version that actually works is <code>Readable.from(asyncGenerator)</code> piped via <code>stream/promises</code>' <code>pipeline()</code> — <strong>not</strong> a plain <code>for (...) res.write(row)</code> loop.</p>
+  <div class="card" style="background:var(--accent-bg); border-color:var(--accent);">
+    <strong>Verified gotcha:</strong> a naive <code>res.write()</code> loop ignores backpressure — it queues every chunk into the socket's internal buffer regardless of whether the client is keeping up, and it blocks the event loop for the same duration as building one big string would. Measured in this lab: the naive loop used <em>more</em> peak RSS (~2GB) than the original buffering bug (~750MB) under a 15-concurrent burst. <code>pipeline()</code> is what actually bounds memory, because it only pulls the next chunk once the writable side signals it's ready.
+  </div>
+  <p><strong>Signature:</strong> sharp, traffic-correlated RSS spikes that recover after the burst — not a one-way climb. That shape (spike-and-recover) is what distinguishes a buffering problem from a true reference leak.</p>
+</div>
+
+<h2>Tool decision</h2>
+<div class="tool-decision">
+  <div class="card">
+    <h3>Heap snapshot diff (Chrome DevTools)</h3>
+    <p>Best for: confirming <em>what object</em> is growing and tracing its retainer path back to the code that created it. Needs <code>--inspect</code> and a manual before/after comparison.</p>
+    <p class="sources"><a href="https://developer.chrome.com/docs/devtools/memory-problems/heap-snapshots">Chrome DevTools: Record heap snapshots</a></p>
+  </div>
+  <div class="card">
+    <h3><code>clinic doctor</code></h3>
+    <p>Best for: a fast first-pass verdict on a running process, and for buffering-style problems (scenario 4) where the <em>shape</em> of the memory graph over time (climb vs. spike-and-recover) matters more than a single diff.</p>
+    <p class="sources"><a href="https://clinicjs.org/documentation/doctor/04-reading-a-profile/">Clinic.js: Reading a profile</a></p>
+  </div>
+</div>
+
+<h2>Glossary</h2>
+<dl class="glossary">
+  <dt>RSS (Resident Set Size)</dt>
+  <dd>Total memory the process holds in physical RAM — heap plus native/C++ buffers plus stack. The number that answers "is this process actually using more memory."</dd>
+  <dt>heapUsed / heapTotal</dt>
+  <dd>V8's JavaScript object heap specifically. A leak in JS objects (caches, closures) shows up here; a leak in native buffers (large strings, streams) shows up more in <code>external</code>/<code>arrayBuffers</code> and RSS.</dd>
+  <dt>Retainer</dt>
+  <dd>In a heap snapshot, whatever is holding a reference to an object, preventing garbage collection. Tracing retainers backward from a leaked object is how you find the responsible code.</dd>
+  <dt>Backpressure</dt>
+  <dd>A stream signaling "I can't accept more data yet." Ignoring it (writing synchronously without checking the return value or waiting for <code>'drain'</code>) is how a "streaming" fix can still buffer everything in memory.</dd>
+  <dt>FIFO eviction</dt>
+  <dd>Removing the oldest inserted entry first when a bounded cache is full. Simple to implement with a <code>Map</code>, since it iterates in insertion order.</dd>
+</dl>
+
+<footer>
+  Part of the memory-leaks learning workspace. See <a href="../MISSION.md">MISSION.md</a> for why this topic, <a href="../RESOURCES.md">RESOURCES.md</a> for full source list, and <code>memory-leak/</code> for the runnable lab this reference summarizes.
+</footer>
+
+</body>
+</html>

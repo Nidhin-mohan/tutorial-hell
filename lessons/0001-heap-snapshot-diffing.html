@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lesson 1 — Heap Snapshot Diffing</title>
+<style>
+  :root {
+    --ink: #1a1d23; --sub: #565d6b; --line: #dfe3e8; --bg: #ffffff; --panel: #f6f7f9;
+    --accent: #9a3412; --accent-bg: #fdf1eb; --fix: #14532d; --fix-bg: #eefbf1;
+    --quiz-bg: #eef2ff; --quiz-line: #c7d2fe;
+    --mono: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e8eaed; --sub: #9aa3b2; --line: #33394a; --bg: #14161c; --panel: #1b1e27;
+      --accent: #fca57d; --accent-bg: #2a1c15; --fix: #86efac; --fix-bg: #142a1c;
+      --quiz-bg: #1a1d33; --quiz-line: #3a3f6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--sans); color: var(--ink); background: var(--bg);
+    max-width: 760px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; line-height: 1.6;
+  }
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  h1 { font-size: 1.8rem; margin-top: 0.3rem; }
+  .lede { color: var(--sub); font-size: 1.05rem; }
+  h2 { font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  code {
+    font-family: var(--mono); background: var(--panel); padding: 0.1rem 0.35rem;
+    border-radius: 4px; font-size: 0.88em;
+  }
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.9rem 1rem; overflow-x: auto; font-size: 0.85rem; }
+  pre code { background: none; padding: 0; }
+  .mission-box {
+    background: var(--accent-bg); border: 1px solid var(--accent); border-radius: 10px;
+    padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: 0.95rem;
+  }
+  .mission-box strong { color: var(--accent); }
+  .step {
+    border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--panel);
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--accent); color: white;
+    font-size: 0.85rem; font-weight: 700; margin-right: 0.5rem;
+  }
+  .quiz {
+    background: var(--quiz-bg); border: 1px solid var(--quiz-line); border-radius: 10px;
+    padding: 1.2rem 1.3rem; margin: 1.5rem 0;
+  }
+  .quiz h3 { margin-top: 0; font-size: 1.05rem; }
+  .quiz label {
+    display: block; padding: 0.5rem 0.7rem; margin: 0.4rem 0; border-radius: 6px;
+    border: 1px solid var(--quiz-line); cursor: pointer; background: var(--bg);
+  }
+  .quiz label:hover { border-color: var(--accent); }
+  .feedback { display: none; margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.9rem; }
+  .feedback.correct { background: var(--fix-bg); color: var(--fix); }
+  .feedback.wrong { background: var(--accent-bg); color: var(--accent); }
+  input[type="radio"] { margin-right: 0.5rem; }
+  .sources { font-size: 0.85rem; color: var(--sub); }
+  .sources a, nav a { color: var(--accent); }
+  nav { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.9rem; }
+  .ask-agent {
+    margin-top: 2rem; padding: 1rem 1.2rem; border-left: 3px solid var(--accent); background: var(--panel);
+    font-size: 0.92rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="eyebrow">Lesson 1 &middot; Memory Leaks</div>
+<h1>Heap Snapshot Diffing</h1>
+<p class="lede">The one technique that underlies almost every memory leak diagnosis: take a snapshot before, exercise the suspect code, take a snapshot after, and read the difference.</p>
+
+<div class="mission-box">
+  <strong>Why this lesson exists:</strong> a real Node/Express service you maintain broke during a build, and the fix that shipped was "give it 3GB and move on." That works until it doesn't. This lesson is step one toward actually knowing <em>what's growing and why</em> instead of guessing at a bigger number.
+</div>
+
+<h2>The idea in one sentence</h2>
+<p>
+V8's garbage collector only frees memory that <em>nothing references anymore</em> — so a "leak" is never really about memory disappearing, it's about your code accidentally holding a reference to something it should have let go of. A heap snapshot is a complete map of every object alive at one instant, plus who's holding onto it. Two snapshots, compared, show you exactly what accumulated between them.
+</p>
+
+<h2>Walkthrough — diagnosing Scenario 1</h2>
+<p>The lab's <code>memory-leak/src/scenario1-cache/leaky.ts</code> caches a geo-IP lookup, but keys the cache with <code>Date.now()</code> — so it never hits, and every request adds a permanent entry. You're going to prove that with a snapshot diff instead of just trusting the README.</p>
+
+<div class="step"><span class="step-num">1</span><strong>Start the leaky server with the inspector on.</strong>
+<pre><code>cd memory-leak
+npx tsx --inspect src/scenario1-cache/leaky.ts</code></pre>
+Node prints a <code>chrome://inspect</code>-style URL. Open Chrome, go to <code>chrome://inspect</code>, and click <strong>inspect</strong> under Remote Target — this opens DevTools attached to your running server.
+</div>
+
+<div class="step"><span class="step-num">2</span><strong>Take the "before" snapshot.</strong>
+In DevTools, go to the <strong>Memory</strong> tab, select <strong>Heap snapshot</strong>, and click <strong>Take snapshot</strong>. Label it mentally as "before" — you don't need to touch the endpoint yet.
+</div>
+
+<div class="step"><span class="step-num">3</span><strong>Exercise the suspect code path.</strong>
+In a second terminal, note the demo link's <code>shortCode</code> printed on startup, then drive load against it with varying IPs so the cache actually gets exercised:
+<pre><code>npm run load-test -- "http://localhost:3000/links/&lt;shortCode&gt;/geo?ip=10.0.{i}.1" 2000 20 0 500</code></pre>
+</div>
+
+<div class="step"><span class="step-num">4</span><strong>Take the "after" snapshot.</strong>
+Back in DevTools, take a second heap snapshot once the load test finishes.
+</div>
+
+<div class="step"><span class="step-num">5</span><strong>Compare them.</strong>
+Select the second (newer) snapshot in the left panel, then switch the dropdown from <strong>Summary</strong> to <strong>Comparison</strong>. Sort by <strong>Size Delta</strong>, descending. You're looking for the constructor/object type with the largest positive delta — in this case, that should be the <code>Map</code> backing <code>geoCache</code>, holding roughly one entry per request you fired.
+</div>
+
+<p>That's the whole loop. Everything else — <code>clinic doctor</code>, production APM graphs, <code>process.memoryUsage()</code> polling — is either a faster first-pass signal that tells you <em>where</em> to point this technique, or a coarser version of the same before/after comparison.</p>
+
+<div class="quiz">
+  <h3>Check yourself</h3>
+  <p>You run this exact before/after diff against <code>scenario3-timers/leaky.ts</code> (the timer leak) instead. You create 500 links, wait well past their TTL, then take the "after" snapshot. What would you expect to see the largest positive Size Delta on?</p>
+  <label><input type="radio" name="q1" onclick="showFeedback('q1-a')"> A <code>Map</code> of cached geo lookups</label>
+  <label><input type="radio" name="q1" onclick="showFeedback('q1-b')"> <code>Timeout</code> objects (or the closures capturing each <code>link</code>), numbering close to 500</label>
+  <label><input type="radio" name="q1" onclick="showFeedback('q1-c')"> Nothing unusual — timers don't show up in heap snapshots</label>
+  <div id="q1-a" class="feedback wrong">Not quite — that's scenario 1's leak shape. This question is about scenario 3, the timer/closure leak. Re-read what <code>leaky.ts</code> in <code>scenario3-timers</code> never calls.</div>
+  <div id="q1-b" class="feedback correct">Right. Every <code>setInterval</code> that's never cleared keeps its closure alive, and that closure holds the <code>link</code> object it captured — so you'd see ~500 live <code>Timeout</code>/closure objects, each retaining a <code>Link</code>, even though every one of those links has already expired and been "deleted" from the store.</div>
+  <div id="q1-c" class="feedback wrong">Timers are real JS objects with real closures — they absolutely show up. <code>Timeout</code> handles and the functions/variables they close over are exactly the kind of thing a heap snapshot is good at surfacing.</div>
+</div>
+
+<h2>Try it against the fixed version</h2>
+<p>Repeat steps 1–5 against <code>npm run scenario1:fixed</code> with the same load test. The Comparison view should show the <code>Map</code>'s size delta plateauing — new entries stop growing past the 500-entry cap once the FIFO eviction kicks in. Seeing that plateau <em>in the diff itself</em>, not just in the <code>/memory</code> endpoint's printed numbers, is the actual skill this lesson is building.</p>
+
+<h2>Sources</h2>
+<p class="sources">
+  <a href="https://nodejs.org/learn/diagnostics/memory/using-heap-snapshot">Using Heap Snapshot — Node.js Learn (official)</a> — the canonical before/after methodology this lesson walks through.<br>
+  <a href="https://developer.chrome.com/docs/devtools/memory-problems/heap-snapshots">Record heap snapshots — Chrome DevTools docs</a> — mechanics of the Comparison view and Size Delta column.
+</p>
+
+<div class="ask-agent">
+  <strong>Stuck, or want to go deeper?</strong> Ask your agent directly — e.g. "why did the Map's retainer path point to X instead of Y" or "what would this look like in <code>clinic doctor</code> instead of DevTools." It's your teacher here, not just the tool that generated this page.
+</div>
+
+<nav>
+  <a href="../reference/node-memory-leak-diagnosis.html">&larr; Reference: the four leak shapes</a> &middot;
+  <a href="../MISSION.md">Mission</a> &middot;
+  <a href="../memory-leak/src/scenario1-cache/README.md">Scenario 1 README</a>
+</nav>
+
+<script>
+  function showFeedback(id) {
+    document.querySelectorAll('.feedback').forEach(function (el) { el.style.display = 'none'; });
+    document.getElementById(id).style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
