@@ -211,9 +211,9 @@
 <div class="wrap">
 
 <header>
-  <div class="eyebrow">DSA Filter Round · MERN dev · 3 yrs exp · target 15–20 LPA</div>
+  <div class="eyebrow">DSA Filter Round · MERN dev · 3 yrs exp · target 10–15 LPA</div>
   <h1>Show up <span class="accent">3 times</span> a week.<br>That's the whole plan.</h1>
-  <div class="subtitle">Scope: Arrays · HashMap · Two Pointer · Sliding Window · Strings · Binary Search · LinkedList · Tree traversals · Recursion · Easy DP. Nothing else. No graphs, no hard DP, no tries.</div>
+  <div class="subtitle">Curriculum = Namaste DSA's own module order (Akshay Saini), scoped to easy-medium breadth — matches <code>Learn/prep/.prep/ROADMAP.md</code>'s "DSA foundations + intermediate" milestone, so this tracker and that roadmap are the same plan. 2–3 month hard cap: whatever's done by the cap, done — no rep-count gate. No hard DP, no tries, no MST/Bellman-Ford-tier graphs.</div>
   <div class="subtitle pace" id="paceLine"></div>
 </header>
 
@@ -257,13 +257,14 @@
       <li>Week runs Monday → Sunday. 3/3 = week closed. Under 3 = tracker shows it. No hiding.</li>
       <li>Two weeks in a row under 2 sessions → drop the floor to 2/week or pause properly. No zombie-dragging.</li>
     </ul>
-    <h3>Session structure (40 min, every time)</h3>
+    <h3>Session structure (40 min, every time) — attempt FIRST</h3>
     <ul>
-      <li><strong>2 min</strong> — recap where you are (look at this page)</li>
-      <li><strong>8 min</strong> — read the pattern for today's problem (open the phase's lesson if one exists)</li>
-      <li><strong>25 min</strong> — attempt the problem, <strong>narrating your reasoning out loud</strong>. This is the actual 2026 interview skill — proctored rounds test if you can think clearly and explain, not just recall.</li>
-      <li><strong>5 min</strong> — check solution, verify time/space complexity, mark status honestly</li>
+      <li><strong>2 min</strong> — recap where you are (look at this page). Pick the next untouched problem.</li>
+      <li><strong>20 min</strong> — attempt it solo, cold, <strong>before</strong> watching the lesson or reading the pattern note. Narrate your reasoning out loud. Not solving it is the expected outcome on a new pattern, not a failure — the struggle is what makes the explanation stick after.</li>
+      <li><strong>10 min</strong> — now open the phase's lesson / pattern note (whichever exists) and watch/read only what's relevant to this one problem.</li>
+      <li><strong>8 min</strong> — check solution, verify time/space complexity, mark status honestly.</li>
     </ul>
+    <p style="font-size:13px;color:var(--muted);margin-top:8px">Why the order flipped (2026-07-19): lecture-first was making sessions boring and passive — attempt-first makes the problem yours before the video answers it for you.</p>
     <h3>Status marks (be honest — lying only wastes your own weeks)</h3>
     <ul>
       <li><strong>✅ Solo</strong> — solved with no hints, no peeking. Only these count toward progress.</li>
@@ -329,131 +330,246 @@
 // renumber them when inserting a phase, or saved progress silently reattaches
 // to the wrong problem. New phases get a fresh id namespace instead. Phase
 // numbers shown on screen come from array order, so reordering is free.
+// Curriculum re-aligned 2026-07-19 to Namaste DSA's (Akshay Saini) actual module
+// order — this used to be a separately-invented pattern order, which created a
+// second competing plan alongside the real course and became part of the block
+// on starting at all. Now it mirrors Learn/prep/.prep/ROADMAP.md's "DSA
+// foundations + intermediate" milestone module-for-module. Scoped to
+// easy-medium breadth (10-15 LPA loops) — hard DP, MST/Bellman-Ford-tier
+// graphs, and Tries are out of scope for this target and skipped.
 const PHASES = [
   {
-    id:'p1', title:'Arrays + Big-O', cue:'Traversal, prefix sums, in-place tricks. 40% of interview problems live here.',
-    note:'<strong>Pattern:</strong> Before coding, say the brute force + its Big-O out loud. Then ask: "can one pass with a running value (max/sum/count) replace nested loops?" Kadane, prefix sums, and buy-sell all reduce O(n²) → O(n) this way.',
+    id:'t0', title:'Time & Space Complexity', cue:'One foundation lesson before anything else — Big-O vocabulary you\'ll use in every phase after this.',
+    note:'<strong>Why first:</strong> every phase note below leans on Big-O language. No problem to attempt here — just watch, then move on.',
     learn:{
       lesson:{href:'lessons/0001-big-o-through-javascript.html', num:'Lesson 01', title:'Big-O Through JavaScript', sub:'Complexity foundation — how to reason about time/space cost.'},
       ref:{href:'reference/big-o-cheatsheet.html', num:'Ref 01', title:'Big-O Cheatsheet', sub:'Complexity classes, common operation costs, growth chart.'}
     },
     problems:[
-      {id:'p1a', lc:1929, name:'Concatenation of Array', slug:'concatenation-of-array'},
-      {id:'p1b', lc:485,  name:'Max Consecutive Ones', slug:'max-consecutive-ones'},
-      {id:'p1c', lc:121,  name:'Best Time to Buy and Sell Stock', slug:'best-time-to-buy-and-sell-stock'},
-      {id:'p1d', lc:53,   name:'Maximum Subarray (Kadane)', slug:'maximum-subarray'},
-      {id:'p1e', lc:283,  name:'Move Zeroes', slug:'move-zeroes'},
-      {id:'p1f', lc:303,  name:'Range Sum Query — prefix sum', slug:'range-sum-query-immutable'},
-      {id:'p1g', lc:238,  name:'Product of Array Except Self', slug:'product-of-array-except-self'},
-      {id:'p1h', lc:189,  name:'Rotate Array', slug:'rotate-array'}
+      {id:'t0a', lc:0, name:'Watch: Time & Space Complexity', slug:''}
     ]
   },
   {
-    id:'p2', title:'HashMap pattern', cue:'Frequency counting + "have I seen this before?" — the highest-ROI pattern in interviews.',
-    note:'<strong>Pattern:</strong> Whenever the brute force is "for each element, scan the rest," a Map/Set kills the inner loop. Two flavors: <em>lookup</em> (Two Sum: store what you need, check as you go) and <em>frequency</em> (anagrams: count characters). In JS use <code>Map</code>/<code>Set</code>, not plain objects.',
+    id:'ar', title:'Arrays - Easy/Medium', cue:'Traversal, in-place rewrites, single-pass tricks. Highest-frequency category in interviews.',
+    note:'<strong>Pattern:</strong> Before coding, say the brute force + its Big-O out loud. Then ask: "can one pass with a running value (max/sum/count/seen-set) replace nested loops?" Most of these collapse O(n²) → O(n) this way.',
+    learn:null,
+    problems:[
+      {id:'ar1', lc:136, name:'Single Number', slug:'single-number'},
+      {id:'ar2', lc:268, name:'Missing Number', slug:'missing-number'},
+      {id:'ar3', lc:485, name:'Max Consecutive Ones', slug:'max-consecutive-ones'},
+      {id:'ar4', lc:283, name:'Move Zeroes', slug:'move-zeroes'},
+      {id:'ar5', lc:88,  name:'Merge Sorted Array', slug:'merge-sorted-array'},
+      {id:'ar6', lc:121, name:'Best Time to Buy and Sell Stock', slug:'best-time-to-buy-and-sell-stock'},
+      {id:'ar7', lc:344, name:'Reverse String', slug:'reverse-string'},
+      {id:'ar8', lc:27,  name:'Remove Element', slug:'remove-element'},
+      {id:'ar9', lc:26,  name:'Remove Duplicates from Sorted Array', slug:'remove-duplicates-from-sorted-array'}
+    ]
+  },
+  {
+    id:'rc', title:'Recursion - Easy/Medium', cue:'Trust the recursion: define what f(n) returns, handle the base case, combine.',
+    note:'<strong>Pattern:</strong> Don\'t trace the whole call stack. State what the function <em>promises</em> to return for a smaller input, and trust it. Base case first, always.',
+    learn:null,
+    problems:[
+      {id:'rc1', lc:0,   name:'Factorial of n', slug:''},
+      {id:'rc2', lc:0,   name:'Sum of all numbers in an Array (recursively)', slug:''},
+      {id:'rc3', lc:231, name:'Power of Two', slug:'power-of-two'},
+      {id:'rc4', lc:0,   name:'Sum of first n numbers', slug:''}
+    ]
+  },
+  {
+    id:'ss', title:'Searching & Sorting - Easy/Medium', cue:'Linear + Binary Search only. Hand-rolled sorting is out of scope — .sort() is fine in interviews.',
+    note:'<strong>Pattern:</strong> Linear search is the baseline you\'re trying to beat. Binary search is the first "throw away half the space" algorithm you\'ll meet — it comes back as its own full phase later, this is just the intro.',
+    learn:null,
+    problems:[
+      {id:'ss1', lc:0,   name:'Linear Search', slug:''},
+      {id:'ss2', lc:704, name:'Binary Search', slug:'binary-search'}
+    ]
+  },
+  {
+    id:'ll', title:'Linked List - Easy/Medium', cue:'Every LL question is one of three tools: rewire prev/curr/next, slow-fast pointers, or a dummy head.',
+    note:'<strong>Pattern:</strong> (1) <em>rewire</em> with prev/curr/next (reverse), (2) <em>slow-fast</em> pointers (middle, cycle detection), (3) <em>dummy head</em> to dodge edge cases (merge, remove). Draw boxes and arrows on paper before coding — always.',
+    learn:null,
+    problems:[
+      {id:'ll1',  lc:707, name:'Design Linked List', slug:'design-linked-list'},
+      {id:'ll2',  lc:876, name:'Middle of the Linked List', slug:'middle-of-the-linked-list'},
+      {id:'ll3',  lc:206, name:'Reverse Linked List', slug:'reverse-linked-list'},
+      {id:'ll4',  lc:141, name:'Linked List Cycle', slug:'linked-list-cycle'},
+      {id:'ll5',  lc:234, name:'Palindrome Linked List', slug:'palindrome-linked-list'},
+      {id:'ll6',  lc:160, name:'Intersection of Two Linked Lists', slug:'intersection-of-two-linked-lists'},
+      {id:'ll7',  lc:203, name:'Remove Linked List Elements', slug:'remove-linked-list-elements'},
+      {id:'ll8',  lc:19,  name:'Remove Nth Node From End of List', slug:'remove-nth-node-from-end-of-list'},
+      {id:'ll9',  lc:83,  name:'Remove Duplicates from Sorted List', slug:'remove-duplicates-from-sorted-list'},
+      {id:'ll10', lc:328, name:'Odd Even Linked List', slug:'odd-even-linked-list'},
+      {id:'ll11', lc:2,   name:'Add Two Numbers', slug:'add-two-numbers'},
+      {id:'ll12', lc:21,  name:'Merge Two Sorted Lists', slug:'merge-two-sorted-lists'},
+      {id:'ll13', lc:24,  name:'Swap Nodes in Pairs', slug:'swap-nodes-in-pairs', optional:true}
+    ]
+  },
+  {
+    id:'st', title:'Strings - Easy/Medium', cue:'Strings are immutable in JS — build with arrays + join(). Anagram/palindrome problems live here.',
+    note:'<strong>Pattern:</strong> Anagram-flavored problems are hashing in disguise (count characters into a Map). Palindrome-flavored problems are two-pointer in disguise (walk from both ends).',
+    learn:null,
+    problems:[
+      {id:'st1', lc:58,   name:'Length of Last Word', slug:'length-of-last-word'},
+      {id:'st2', lc:2942, name:'Find Words Containing Character', slug:'find-words-containing-character'},
+      {id:'st3', lc:771,  name:'Jewels and Stones', slug:'jewels-and-stones'},
+      {id:'st4', lc:1221, name:'Split a String in Balanced Strings', slug:'split-a-string-in-balanced-strings'},
+      {id:'st5', lc:541,  name:'Reverse String II', slug:'reverse-string-ii'},
+      {id:'st6', lc:125,  name:'Valid Palindrome', slug:'valid-palindrome'},
+      {id:'st7', lc:1903, name:'Largest Odd Number in a String', slug:'largest-odd-number-in-string'},
+      {id:'st8', lc:14,   name:'Longest Common Prefix', slug:'longest-common-prefix'},
+      {id:'st9', lc:242,  name:'Valid Anagram', slug:'valid-anagram'},
+      {id:'st10',lc:205,  name:'Isomorphic Strings', slug:'isomorphic-strings'},
+      {id:'st11',lc:49,   name:'Group Anagrams', slug:'group-anagrams'}
+    ]
+  },
+  {
+    id:'sq', title:'Stack and Queues', cue:'LIFO/FIFO — parentheses matching, "next greater element," and building one structure from the other.',
+    note:'<strong>Pattern:</strong> Stack = undo/matching (parentheses, next-greater via monotonic stack). Queue = process-in-order (BFS later reuses this). "Implement X using Y" problems just force you to understand the primitive by rebuilding it.',
+    learn:null,
+    problems:[
+      {id:'sq1', lc:232, name:'Implement Queue using Stacks', slug:'implement-queue-using-stacks'},
+      {id:'sq2', lc:225, name:'Implement Stack using Queues', slug:'implement-stack-using-queues'},
+      {id:'sq3', lc:20,  name:'Valid Parentheses', slug:'valid-parentheses'},
+      {id:'sq4', lc:155, name:'Min Stack', slug:'min-stack'},
+      {id:'sq5', lc:1021,name:'Remove Outermost Parentheses', slug:'remove-outermost-parentheses'},
+      {id:'sq6', lc:150, name:'Evaluate Reverse Polish Notation', slug:'evaluate-reverse-polish-notation'},
+      {id:'sq7', lc:496, name:'Next Greater Element I', slug:'next-greater-element-i'},
+      {id:'sq8', lc:739, name:'Daily Temperatures', slug:'daily-temperatures'},
+      {id:'sq9', lc:503, name:'Next Greater Element II', slug:'next-greater-element-ii', optional:true}
+    ]
+  },
+  {
+    id:'tp', title:'Two Pointers & Sliding Window', cue:'The pattern everything so far has been building toward. Two Sum lives here — Akshay teaches it in this module, not Arrays.',
+    note:'<strong>Two Pointer:</strong> sorted data or pair-hunting → walk from both ends, move whichever pointer helps. <strong>Sliding Window:</strong> "longest/shortest subarray or substring satisfying X" — expand right greedily, shrink left only while the window is invalid. Track window state with a Map, say the invariant out loud every time.',
     learn:{
       lesson:{href:'lessons/0002-two-sum-hashing-pattern.html', num:'Lesson 02', title:'Two Sum & the Hashing Pattern', sub:'Map/Set for O(1) lookups — Two Sum, Contains Duplicate, Valid Anagram.'},
       ref:{href:'reference/hashing-pattern.html', num:'Ref 02', title:'The Hashing Pattern', sub:'When to reach for Map/Set, template snippets, under-the-hood O(1).'}
     },
     problems:[
-      {id:'p2a', lc:217, name:'Contains Duplicate', slug:'contains-duplicate'},
-      {id:'p2b', lc:1,   name:'Two Sum', slug:'two-sum'},
-      {id:'p2c', lc:242, name:'Valid Anagram', slug:'valid-anagram'},
-      {id:'p2d', lc:387, name:'First Unique Character', slug:'first-unique-character-in-a-string'},
-      {id:'p2e', lc:49,  name:'Group Anagrams', slug:'group-anagrams'},
-      {id:'p2f', lc:205, name:'Isomorphic Strings', slug:'isomorphic-strings'},
-      {id:'p2g', lc:560, name:'Subarray Sum Equals K', slug:'subarray-sum-equals-k'},
-      {id:'p2h', lc:128, name:'Longest Consecutive Sequence', slug:'longest-consecutive-sequence'}
+      {id:'tp1', lc:1,   name:'Two Sum', slug:'two-sum'},
+      {id:'tp2', lc:167, name:'Two Sum II - Input Array Is Sorted', slug:'two-sum-ii-input-array-is-sorted'},
+      {id:'tp3', lc:392, name:'Is Subsequence', slug:'is-subsequence'},
+      {id:'tp4', lc:11,  name:'Container With Most Water', slug:'container-with-most-water'},
+      {id:'tp5', lc:15,  name:'3Sum', slug:'3sum'},
+      {id:'tp6', lc:42,  name:'Trapping Rain Water', slug:'trapping-rain-water'},
+      {id:'tp7', lc:3,   name:'Longest Substring Without Repeating Characters', slug:'longest-substring-without-repeating-characters'},
+      {id:'tp8', lc:424, name:'Longest Repeating Character Replacement', slug:'longest-repeating-character-replacement'},
+      {id:'tp9', lc:567, name:'Permutation in String', slug:'permutation-in-string'},
+      {id:'tp10',lc:239, name:'Sliding Window Maximum', slug:'sliding-window-maximum', optional:true}
     ]
   },
   {
-    id:'p3', title:'Two Pointer', cue:'Sorted data or pair-hunting → walk from both ends instead of nesting loops.',
-    note:'<strong>Pattern:</strong> Two triggers: (1) array is <em>sorted</em> → pointers at both ends, move the one that helps; (2) <em>in-place rewrite</em> → slow pointer writes, fast pointer reads. Turns O(n²) into O(n) with O(1) space.',
+    id:'bs', title:'Binary Search Algorithm', cue:'The deep dive — rotated arrays, peaks, and "find the boundary" variants.',
+    note:'<strong>Pattern:</strong> The invariant is the whole game: <em>if the answer exists, it is always inside [lo, hi]</em>. Loop <code>while (lo &lt;= hi)</code>, take <code>mid</code>, discard the half that <em>cannot</em> contain the answer. Rotated-array variants add one question first: "which half is sorted?"',
     learn:null,
     problems:[
-      {id:'p3a', lc:125, name:'Valid Palindrome', slug:'valid-palindrome'},
-      {id:'p3b', lc:167, name:'Two Sum II (sorted)', slug:'two-sum-ii-input-array-is-sorted'},
-      {id:'p3c', lc:26,  name:'Remove Duplicates from Sorted Array', slug:'remove-duplicates-from-sorted-array'},
-      {id:'p3d', lc:88,  name:'Merge Sorted Array', slug:'merge-sorted-array'},
-      {id:'p3e', lc:11,  name:'Container With Most Water', slug:'container-with-most-water'},
-      {id:'p3f', lc:15,  name:'3Sum', slug:'3sum'}
+      {id:'bs1', lc:69,  name:'Sqrt(x)', slug:'sqrtx'},
+      {id:'bs2', lc:374, name:'Guess Number Higher or Lower', slug:'guess-number-higher-or-lower'},
+      {id:'bs3', lc:33,  name:'Search in Rotated Sorted Array', slug:'search-in-rotated-sorted-array'},
+      {id:'bs4', lc:278, name:'First Bad Version', slug:'first-bad-version'},
+      {id:'bs5', lc:162, name:'Find Peak Element', slug:'find-peak-element'},
+      {id:'bs6', lc:153, name:'Find Minimum in Rotated Sorted Array', slug:'find-minimum-in-rotated-sorted-array'},
+      {id:'bs7', lc:34,  name:'Find First and Last Position of Element in Sorted Array', slug:'find-first-and-last-position-of-element-in-sorted-array'},
+      {id:'bs8', lc:658, name:'Find K Closest Elements', slug:'find-k-closest-elements', optional:true}
     ]
   },
   {
-    id:'p4', title:'Sliding Window', cue:'"Longest/shortest subarray or substring satisfying X" — the phrase itself is the signal.',
-    note:'<strong>Pattern:</strong> Fixed window: slide, add the entering element, remove the leaving one. Variable window: expand <code>right</code> greedily, shrink <code>left</code> only while the window is invalid. Track window state with a Map. Say the invariant out loud every time.',
+    id:'bt', title:'Binary Tree', cue:'Traversals first, then the standard shape-comparison and path problems built on top.',
+    note:'<strong>Pattern:</strong> Base case (<code>if (!node) return ...</code>) + recurse left + recurse right + combine. Don\'t trace the whole call stack — state what the function promises to return and trust it. BFS (level order) is the one exception: use a queue, process level by level.',
     learn:null,
     problems:[
-      {id:'p4a', lc:643, name:'Max Average Subarray I (fixed)', slug:'maximum-average-subarray-i'},
-      {id:'p4b', lc:3,   name:'Longest Substring Without Repeating', slug:'longest-substring-without-repeating-characters'},
-      {id:'p4c', lc:209, name:'Minimum Size Subarray Sum', slug:'minimum-size-subarray-sum'},
-      {id:'p4d', lc:424, name:'Longest Repeating Character Replacement', slug:'longest-repeating-character-replacement'},
-      {id:'p4e', lc:567, name:'Permutation in String', slug:'permutation-in-string'},
-      {id:'p4f', lc:76,  name:'Minimum Window Substring', slug:'minimum-window-substring', optional:true}
+      {id:'bt1', lc:144, name:'Binary Tree Preorder Traversal', slug:'binary-tree-preorder-traversal'},
+      {id:'bt2', lc:94,  name:'Binary Tree Inorder Traversal', slug:'binary-tree-inorder-traversal'},
+      {id:'bt3', lc:145, name:'Binary Tree Postorder Traversal', slug:'binary-tree-postorder-traversal'},
+      {id:'bt4', lc:104, name:'Maximum Depth of Binary Tree', slug:'maximum-depth-of-binary-tree'},
+      {id:'bt5', lc:112, name:'Path Sum', slug:'path-sum'},
+      {id:'bt6', lc:101, name:'Symmetric Tree', slug:'symmetric-tree'},
+      {id:'bt7', lc:226, name:'Invert Binary Tree', slug:'invert-binary-tree'},
+      {id:'bt8', lc:100, name:'Same Tree', slug:'same-tree'},
+      {id:'bt9', lc:110, name:'Balanced Binary Tree', slug:'balanced-binary-tree'},
+      {id:'bt10',lc:543, name:'Diameter of Binary Tree', slug:'diameter-of-binary-tree'},
+      {id:'bt11',lc:102, name:'Binary Tree Level Order Traversal', slug:'binary-tree-level-order-traversal'},
+      {id:'bt12',lc:236, name:'Lowest Common Ancestor of a Binary Tree', slug:'lowest-common-ancestor-of-a-binary-tree'},
+      {id:'bt13',lc:199, name:'Binary Tree Right Side View', slug:'binary-tree-right-side-view', optional:true}
     ]
   },
   {
-    id:'p5', title:'Strings + mixed revision', cue:'String manipulation, then re-solve your 5 weakest from phases 1–4.',
-    note:'<strong>Pattern:</strong> Strings are immutable in JS — build with arrays + <code>join</code>. "Expand around center" for palindromes. This phase is 50% revision on purpose: clear your entire 🟡/❌ queue from phases 1–4 before moving on. That IS the phase.',
+    id:'bst', title:'Binary Search Tree', cue:'Short phase — a BST is just a binary tree with an ordering invariant to exploit.',
+    note:'<strong>Pattern:</strong> Left subtree &lt; node &lt; right subtree, always. Inorder traversal of a BST comes out sorted for free — that\'s the whole trick behind most of these.',
     learn:null,
     problems:[
-      {id:'p5a', lc:344, name:'Reverse String', slug:'reverse-string'},
-      {id:'p5b', lc:14,  name:'Longest Common Prefix', slug:'longest-common-prefix'},
-      {id:'p5c', lc:151, name:'Reverse Words in a String', slug:'reverse-words-in-a-string'},
-      {id:'p5d', lc:443, name:'String Compression', slug:'string-compression'},
-      {id:'p5e', lc:5,   name:'Longest Palindromic Substring', slug:'longest-palindromic-substring'}
+      {id:'bst1', lc:98,  name:'Validate Binary Search Tree', slug:'validate-binary-search-tree'},
+      {id:'bst2', lc:700, name:'Search in a Binary Search Tree', slug:'search-in-a-binary-search-tree'},
+      {id:'bst3', lc:701, name:'Insert into a Binary Search Tree', slug:'insert-into-a-binary-search-tree'},
+      {id:'bst4', lc:230, name:'Kth Smallest Element in a BST', slug:'kth-smallest-element-in-a-bst'},
+      {id:'bst5', lc:235, name:'Lowest Common Ancestor of a BST', slug:'lowest-common-ancestor-of-a-binary-search-tree'}
     ]
   },
   {
-    id:'pbs', title:'Binary Search', cue:'Sorted input + "find X fast" → throw away half the search space every step. O(log n).',
-    note:'<strong>Pattern:</strong> The invariant is the whole game: <em>if the answer exists, it is always inside [lo, hi]</em>. Loop <code>while (lo &lt;= hi)</code>, take <code>mid = Math.floor((lo + hi) / 2)</code>, then discard the half that <em>cannot</em> contain the answer. Rotated-array variants are the same loop with one extra question first: "which half is sorted?" — search that half if the target is in its range, else the other. <em>Senior note:</em> the famous <code>lo + (hi - lo) / 2</code> trick guards against integer overflow in Java/C++; JS numbers are 64-bit floats so it is not needed here — but know why it exists, because interviewers ask.',
+    id:'hp', title:'Heap / Priority Queue', cue:'"Kth largest/smallest" or "top K" in the problem → reach for a heap. JS has no built-in one, but knowing when to use one matters more than hand-building it at this level.',
+    note:'<strong>Pattern:</strong> A min/max-heap keeps the extreme element accessible in O(1) and insert/remove in O(log n). Whenever you\'d otherwise re-sort the whole array just to find one Kth element, that\'s the heap signal.',
     learn:null,
     problems:[
-      {id:'pbsa', lc:704, name:'Binary Search', slug:'binary-search'},
-      {id:'pbsb', lc:35,  name:'Search Insert Position', slug:'search-insert-position'},
-      {id:'pbsc', lc:278, name:'First Bad Version', slug:'first-bad-version'},
-      {id:'pbsd', lc:74,  name:'Search a 2D Matrix', slug:'search-a-2d-matrix'},
-      {id:'pbse', lc:33,  name:'Search in Rotated Sorted Array', slug:'search-in-rotated-sorted-array'},
-      {id:'pbsf', lc:153, name:'Find Minimum in Rotated Sorted Array', slug:'find-minimum-in-rotated-sorted-array', optional:true}
+      {id:'hp1', lc:215, name:'Kth Largest Element in an Array', slug:'kth-largest-element-in-an-array'},
+      {id:'hp2', lc:703, name:'Kth Largest Element in a Stream', slug:'kth-largest-element-in-a-stream'},
+      {id:'hp3', lc:1046,name:'Last Stone Weight', slug:'last-stone-weight'},
+      {id:'hp4', lc:347, name:'Top K Frequent Elements', slug:'top-k-frequent-elements'},
+      {id:'hp5', lc:378, name:'Kth Smallest Element in a Sorted Matrix', slug:'kth-smallest-element-in-a-sorted-matrix', optional:true}
     ]
   },
   {
-    id:'p6', title:'LinkedList basics', cue:'Five problems, three tools: prev/curr rewiring, slow-fast pointers, dummy head.',
-    note:'<strong>Pattern:</strong> Every basic LinkedList question is one of: (1) <em>rewire</em> with prev/curr/next (reverse), (2) <em>slow-fast</em> pointers (middle, cycle), (3) <em>dummy head</em> to avoid edge cases (merge, remove). Draw boxes and arrows on paper before coding — always.',
+    id:'bk', title:'Backtracking', cue:'"Generate all X" (subsets, combinations, permutations) → try, recurse, undo.',
+    note:'<strong>Pattern:</strong> Choose an option → recurse deeper with it → undo the choice (backtrack) → try the next option. The "undo" step is the part beginners forget and is the entire reason it\'s called backtracking.',
     learn:null,
     problems:[
-      {id:'p6a', lc:206, name:'Reverse Linked List', slug:'reverse-linked-list'},
-      {id:'p6b', lc:876, name:'Middle of the Linked List', slug:'middle-of-the-linked-list'},
-      {id:'p6c', lc:141, name:'Linked List Cycle', slug:'linked-list-cycle'},
-      {id:'p6d', lc:21,  name:'Merge Two Sorted Lists', slug:'merge-two-sorted-lists'},
-      {id:'p6e', lc:19,  name:'Remove Nth Node From End', slug:'remove-nth-node-from-end-of-list'}
+      {id:'bk1', lc:78, name:'Subsets', slug:'subsets'},
+      {id:'bk2', lc:77, name:'Combinations', slug:'combinations'},
+      {id:'bk3', lc:46, name:'Permutations', slug:'permutations'},
+      {id:'bk4', lc:39, name:'Combination Sum', slug:'combination-sum'},
+      {id:'bk5', lc:17, name:'Letter Combinations of a Phone Number', slug:'letter-combinations-of-a-phone-number'},
+      {id:'bk6', lc:79, name:'Word Search', slug:'word-search', optional:true}
     ]
   },
   {
-    id:'p7', title:'Recursion + Tree traversals', cue:'Trust the recursion: define what f(node) returns, handle null, combine children.',
-    note:'<strong>Pattern:</strong> Every tree problem here is: base case (<code>if (!node) return ...</code>) + recurse left + recurse right + combine. Don\'t trace the whole call stack — state what the function <em>promises</em> to return and trust it. BFS (level order) is the one exception: use a queue, process level by level.',
+    id:'gr', title:'Greedy Algorithm', cue:'Make the locally-best choice at each step and never look back. Interval problems live here.',
+    note:'<strong>Pattern:</strong> Greedy works when a locally optimal choice provably leads to a globally optimal one — usually provable by sorting first (by end time, by ratio, etc.). If you can\'t argue why the greedy choice is safe, it\'s probably not a greedy problem.',
     learn:null,
     problems:[
-      {id:'p7a', lc:509, name:'Fibonacci (recursion warmup)', slug:'fibonacci-number'},
-      {id:'p7b', lc:104, name:'Maximum Depth of Binary Tree', slug:'maximum-depth-of-binary-tree'},
-      {id:'p7c', lc:226, name:'Invert Binary Tree', slug:'invert-binary-tree'},
-      {id:'p7d', lc:100, name:'Same Tree', slug:'same-tree'},
-      {id:'p7e', lc:94,  name:'Binary Tree Inorder Traversal', slug:'binary-tree-inorder-traversal'},
-      {id:'p7f', lc:102, name:'Level Order Traversal (BFS)', slug:'binary-tree-level-order-traversal'}
+      {id:'gr1', lc:455, name:'Assign Cookies', slug:'assign-cookies'},
+      {id:'gr2', lc:860, name:'Lemonade Change', slug:'lemonade-change'},
+      {id:'gr3', lc:122, name:'Best Time to Buy and Sell Stock II', slug:'best-time-to-buy-and-sell-stock-ii'},
+      {id:'gr4', lc:57,  name:'Insert Interval', slug:'insert-interval'},
+      {id:'gr5', lc:56,  name:'Merge Intervals', slug:'merge-intervals'},
+      {id:'gr6', lc:435, name:'Non-overlapping Intervals', slug:'non-overlapping-intervals', optional:true}
     ]
   },
   {
-    id:'p8', title:'Easy DP + mock week', cue:'DP = recursion + memory. Then two timed mocks — the dress rehearsal.',
-    note:'<strong>Pattern:</strong> Ask: "answer for step n = some combination of answers for smaller steps?" Write the recurrence in one line first (e.g. <code>f(n) = f(n-1) + f(n-2)</code>), then fill an array bottom-up. <strong>Mocks:</strong> 2 unseen problems, 60 min, webcam-style pressure — solve while talking out loud the entire time. No pauses, no peeking. This simulates the real proctored round.',
+    id:'dp', title:'Dynamic Programming (Easy)', cue:'DP = recursion + memory. Stop at easy-medium — hard DP stays out of scope for this target.',
+    note:'<strong>Pattern:</strong> Ask "does the answer for n depend on answers for smaller n?" Write the recurrence in one line first (e.g. <code>f(n) = f(n-1) + f(n-2)</code>), then fill an array bottom-up instead of re-computing recursively.',
     learn:null,
     problems:[
-      {id:'p8a', lc:70,  name:'Climbing Stairs', slug:'climbing-stairs'},
-      {id:'p8b', lc:746, name:'Min Cost Climbing Stairs', slug:'min-cost-climbing-stairs'},
-      {id:'p8c', lc:198, name:'House Robber', slug:'house-robber'},
-      {id:'p8d', lc:322, name:'Coin Change', slug:'coin-change'},
-      {id:'p8e', lc:118, name:'Pascal\'s Triangle', slug:'pascals-triangle'},
-      {id:'p8f', lc:0,   name:'MOCK 1 — two unseen easy/mediums, 60 min, talk out loud', slug:''},
-      {id:'p8g', lc:0,   name:'MOCK 2 — two unseen easy/mediums, 60 min, talk out loud', slug:''}
+      {id:'dp1', lc:70,  name:'Climbing Stairs', slug:'climbing-stairs'},
+      {id:'dp2', lc:746, name:'Min Cost Climbing Stairs', slug:'min-cost-climbing-stairs'},
+      {id:'dp3', lc:198, name:'House Robber', slug:'house-robber'},
+      {id:'dp4', lc:213, name:'House Robber II', slug:'house-robber-ii'},
+      {id:'dp5', lc:322, name:'Coin Change', slug:'coin-change'},
+      {id:'dp6', lc:53,  name:'Maximum Subarray (Kadane\'s)', slug:'maximum-subarray'},
+      {id:'dp7', lc:5,   name:'Longest Palindromic Substring', slug:'longest-palindromic-substring'},
+      {id:'dp8', lc:139, name:'Word Break', slug:'word-break', optional:true}
+    ]
+  },
+  {
+    id:'gp', title:'Graphs (intro)', cue:'BFS, DFS, and reachability. Stop before MST/Bellman-Ford/Floyd-Warshall — those are past this target\'s depth.',
+    note:'<strong>Pattern:</strong> DFS = go deep with a stack/recursion, good for "does a path exist" / cycle detection. BFS = go wide with a queue, good for "shortest path in an unweighted graph." Topological sort is DFS or BFS with a dependency twist — only valid on a DAG.',
+    learn:null,
+    problems:[
+      {id:'gp1', lc:1971, name:'Find if Path Exists in Graph', slug:'find-if-path-exists-in-graph'},
+      {id:'gp2', lc:797,  name:'All Paths From Source to Target', slug:'all-paths-from-source-to-target'},
+      {id:'gp3', lc:1976, name:'Number of Ways to Arrive at Destination', slug:'number-of-ways-to-arrive-at-destination', optional:true},
+      {id:'gp4', lc:0,    name:'Detect Cycle in an Undirected Graph', slug:''},
+      {id:'gp5', lc:0,    name:'Topological Sort - DFS + Kahn\'s Algorithm (BFS)', slug:''},
+      {id:'gp6', lc:332,  name:'Reconstruct Itinerary', slug:'reconstruct-itinerary', optional:true}
     ]
   }
 ];

@@ -5,7 +5,7 @@ Curated, high-trust sources for a JavaScript developer prepping for mid-size/sta
 ## Knowledge
 
 - **[Namaste DSA (namastedev.com) — OWNED COURSE](https://namastedev.com/learn/namaste-dsa)**
-  The user's purchased course: DSA from scratch in JavaScript, arrays → linked lists → trees → graphs → DP. **Caveat:** 280+ questions, heavily FANG-focused, overwhelming as a standalone path for a beginner targeting mid-size companies. Use as the **video reference** for whatever topic the current lesson covers — watch the relevant section, skip the FANG-only hard problems. These lessons provide the curated order; Namaste DSA provides the deep-dive explanation per topic.
+  The user's purchased course: DSA from scratch in JavaScript, arrays → linked lists → trees → graphs → DP. 280+ questions total, heavily FANG-focused if taken whole. **As of 2026-07-19, its own module order is the single curriculum** — `index.html`'s PHASES array is scoped and re-sequenced directly from it (skipping the FANG-only-depth modules), not a separately-invented order. Watch the relevant module section per phase; the lessons/reference cards in this workspace add the "why it works" depth Namaste's videos sometimes skip.
 - [Tech Interview Handbook — Study Cheatsheet & Algorithm guides](https://www.techinterviewhandbook.org/algorithms/study-cheatsheet/)
   Free, widely respected, written by an ex-Meta engineer. Pattern-by-pattern cheat sheets with the key tricks per topic. Use for: what to study and the "gotchas" for each data structure.
 - [Big-O Cheat Sheet — bigocheatsheet.com](https://www.bigocheatsheet.com/)
